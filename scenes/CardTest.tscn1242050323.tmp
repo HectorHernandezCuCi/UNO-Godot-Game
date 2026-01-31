@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://dhexvn1u8ng44" path="res://scenes/GameManager.gd" id="1_3cdyq"]
 [ext_resource type="PackedScene" uid="uid://cbanle7n0m2kk" path="res://scenes/Card.tscn" id="1_o2f6n"]
 [ext_resource type="Texture2D" uid="uid://casbse7ln5kyg" path="res://assets/Cards/Blue- 0.png" id="2_ig4c8"]
-[ext_resource type="PackedScene" uid="uid://dkqara314ykbe" path="res://scenes/ColorPicker.tscn" id="2_nbusw"]
 [ext_resource type="Texture2D" uid="uid://ci7kwiea8vlju" path="res://assets/Cards/Blue- 1.png" id="3_q6ns7"]
 [ext_resource type="Texture2D" uid="uid://k2l80jj7k36t" path="res://assets/Cards/Blue- 13.png" id="4_6x1rn"]
 [ext_resource type="Texture2D" uid="uid://d8ul58ct7kqt" path="res://assets/Cards/Blue- 12.png" id="5_ulhrk"]
@@ -59,7 +58,6 @@
 
 [node name="Main" type="Node2D" unique_id=576415975]
 script = ExtResource("1_3cdyq")
-color_selector_scene = ExtResource("2_nbusw")
 
 [node name="Cards" type="Node2D" parent="." unique_id=894103943]
 

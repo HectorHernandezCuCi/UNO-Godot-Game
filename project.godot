@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="UNO"
+run/main_scene="uid://b77n8aurxvgsp"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+
+[display]
+
+window/size/mode=2
 
 [input]
 
