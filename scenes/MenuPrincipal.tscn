@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://dwxmba3d2qxam"]
+
+[ext_resource type="Texture2D" uid="uid://bu4hutai4vlfn" path="res://assets/kenney_ui-pack/PNG/Grey/Default/button_rectangle_gradient.png" id="1_q4epk"]
+[ext_resource type="Texture2D" uid="uid://sste14rlg5mj" path="res://assets/kenney_ui-pack/PNG/Blue/Default/button_rectangle_gradient.png" id="2_cjknc"]
+[ext_resource type="Texture2D" uid="uid://bm1j8hhbr3kc5" path="res://assets/kenney_ui-pack/PNG/Red/Default/button_rectangle_depth_flat.png" id="3_f5jwn"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_4o3yp"]
+load_path = "res://.godot/imported/button_rectangle_gradient.png-13546b7d27a486047bf897cac9baff29.ctex"
+
+[node name="Main" type="Node2D" unique_id=1680484414]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=2031190895]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1984494111]
+
+[node name="GridContainer" type="GridContainer" parent="CanvasLayer" unique_id=1463789416]
+offset_right = 192.0
+offset_bottom = 64.0
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/GridContainer" unique_id=538570311]
+layout_mode = 2
+texture = ExtResource("1_q4epk")
+
+[node name="ButtonPlay" type="TextureRect" parent="CanvasLayer/GridContainer" unique_id=405134198]
+layout_mode = 2
+texture = ExtResource("2_cjknc")
+
+[node name="ButtonOptions" type="TextureRect" parent="CanvasLayer/GridContainer" unique_id=2013212159]
+layout_mode = 2
+texture = SubResource("CompressedTexture2D_4o3yp")
+
+[node name="ButtonExit" type="TextureRect" parent="CanvasLayer/GridContainer" unique_id=1069709235]
+layout_mode = 2
+texture = ExtResource("3_f5jwn")
+
+[node name="Configure" type="Label" parent="CanvasLayer/GridContainer" unique_id=462141999]
+layout_mode = 2
+text = "Configuration"
+
+[node name="Exit" type="Label" parent="CanvasLayer/GridContainer" unique_id=1527998606]
+layout_mode = 2
+text = "Exit"
+
+[node name="Play" type="Label" parent="CanvasLayer/GridContainer" unique_id=1519599362]
+layout_mode = 2
+text = "Play"
