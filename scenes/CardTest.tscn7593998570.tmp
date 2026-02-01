@@ -1,12 +1,10 @@
 [gd_scene format=3 uid="uid://b77n8aurxvgsp"]
 
-[ext_resource type="Script" uid="uid://dhexvn1u8ng44" path="res://scripts/GameManager.gd" id="1_3cdyq"]
+[ext_resource type="Script" uid="uid://dhexvn1u8ng44" path="res://scenes/GameManager.gd" id="1_3cdyq"]
 [ext_resource type="PackedScene" uid="uid://cbanle7n0m2kk" path="res://scenes/Card.tscn" id="1_o2f6n"]
 [ext_resource type="Texture2D" uid="uid://casbse7ln5kyg" path="res://assets/Cards/Blue- 0.png" id="2_ig4c8"]
 [ext_resource type="PackedScene" uid="uid://dkqara314ykbe" path="res://scenes/ColorPicker.tscn" id="2_nbusw"]
-[ext_resource type="PackedScene" uid="uid://d3o7coqvvbk1i" path="res://scenes/uno_button.tscn" id="3_lbtv0"]
 [ext_resource type="Texture2D" uid="uid://ci7kwiea8vlju" path="res://assets/Cards/Blue- 1.png" id="3_q6ns7"]
-[ext_resource type="PackedScene" uid="uid://oyp0msm12lot" path="res://scenes/uno_announcement.tscn" id="4_1yjom"]
 [ext_resource type="Texture2D" uid="uid://k2l80jj7k36t" path="res://assets/Cards/Blue- 13.png" id="4_6x1rn"]
 [ext_resource type="Texture2D" uid="uid://d8ul58ct7kqt" path="res://assets/Cards/Blue- 12.png" id="5_ulhrk"]
 [ext_resource type="Texture2D" uid="uid://dmse2i6jcr1qf" path="res://assets/Cards/Blue- 4.png" id="6_11lgo"]
@@ -61,9 +59,13 @@
 
 [node name="Main" type="Node2D" unique_id=576415975]
 script = ExtResource("1_3cdyq")
+deck_position = null
+hand_center_pos = null
+discard_position = null
+card_overlap = null
+hover_lift = null
+hover_scale = null
 color_selector_scene = ExtResource("2_nbusw")
-uno_button_scene = ExtResource("3_lbtv0")
-uno_announcement_scene = ExtResource("4_1yjom")
 
 [node name="Cards" type="Node2D" parent="." unique_id=894103943]
 
@@ -676,14 +678,14 @@ card_value = 0
 [node name="ReverseYellowCard7" parent="Cards" unique_id=283188664 instance=ExtResource("1_o2f6n")]
 position = Vector2(1315.5, 1048)
 texture = ExtResource("53_q06ge")
-card_color = 3
+card_color = 0
 card_type = 2
 card_value = 0
 
 [node name="ReverseYellowCard8" parent="Cards" unique_id=1442256235 instance=ExtResource("1_o2f6n")]
 position = Vector2(1319, 1201)
 texture = ExtResource("53_q06ge")
-card_color = 3
+card_color = 0
 card_type = 2
 card_value = 0
 
