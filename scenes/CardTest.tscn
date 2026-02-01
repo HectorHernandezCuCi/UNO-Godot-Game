@@ -516,14 +516,14 @@ card_value = 0
 [node name="ReverseGreenCard5" parent="Cards" unique_id=766125613 instance=ExtResource("1_o2f6n")]
 position = Vector2(889.5, 1041)
 texture = ExtResource("40_2td5w")
-card_color = 0
+card_color = 2
 card_type = 2
 card_value = 0
 
 [node name="ReverseGreenCard6" parent="Cards" unique_id=102932460 instance=ExtResource("1_o2f6n")]
 position = Vector2(890, 1199)
 texture = ExtResource("40_2td5w")
-card_color = 0
+card_color = 2
 card_type = 2
 card_value = 0
 
