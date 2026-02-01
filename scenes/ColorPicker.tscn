@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dkqara314ykbe"]
 
-[ext_resource type="Script" uid="uid://dmi2v6kqi7y4o" path="res://scenes/ColorSelector.gd" id="1_7jc3o"]
+[ext_resource type="Script" uid="uid://dmi2v6kqi7y4o" path="res://scripts/ColorSelector.gd" id="1_7jc3o"]
 
 [node name="ColorSelector" type="CanvasLayer" unique_id=107894908]
 script = ExtResource("1_7jc3o")
