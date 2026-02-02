@@ -76,9 +76,13 @@ func setup_game():
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("Pause"):
-		SceneManager.pause_game(true)
+		print("ESC detectado en GameManager")
+		SceneManager.pause_game(not get_tree().paused)
+		get_viewport().set_input_as_handled()
 
-	
+
+
+
 
 # --- Card Logic ---
 
