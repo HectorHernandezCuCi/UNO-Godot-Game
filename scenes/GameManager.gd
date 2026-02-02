@@ -74,6 +74,12 @@ func setup_game():
 			break
 		draw_card_to_hand()
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("Pause"):
+		SceneManager.pause_game(true)
+
+	
+
 # --- Card Logic ---
 
 func check_top_card_wild():
