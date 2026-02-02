@@ -1191,3 +1191,10 @@ func get_current_turn() -> Turn:
 func is_game_active() -> bool:
 	"""Returns if game is active"""
 	return game_active
+	
+#Function to pause game
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("Pause"):
+		print("ESC detectado en GameManager")
+		SceneManager.pause_game(not get_tree().paused)
+		get_viewport().set_input_as_handled()
