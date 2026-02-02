@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://cjbelt7gme88w"]
+
+[ext_resource type="Theme" uid="uid://bixslmsu7vh2k" path="res://scenes/Menus/menu_theme.tres" id="1_8onqy"]
+[ext_resource type="Script" uid="uid://cl0baapusjuji" path="res://scenes/Menus/pause_menu.gd" id="2_drmev"]
+[ext_resource type="PackedScene" uid="uid://dgr1a5y0f18sh" path="res://scenes/Menus/CustomButton.tscn" id="3_igypb"]
+
+[node name="PauseMenu" type="Control" unique_id=779015376]
+process_mode = 2
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_8onqy")
+script = ExtResource("2_drmev")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1474500724]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=638331253]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=130004014]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1881298407]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 48
+text = "GAME PAUSED"
+
+[node name="Resume" parent="MarginContainer/VBoxContainer" unique_id=1280119290 instance=ExtResource("3_igypb")]
+layout_mode = 2
+theme_override_font_sizes/font_size = 46
+text = "Resume"
+
+[node name="ExitGame" parent="MarginContainer/VBoxContainer" unique_id=1622885360 instance=ExtResource("3_igypb")]
+layout_mode = 2
+theme_override_font_sizes/font_size = 46
+text = "Exit Game"
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/Resume" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/ExitGame" to="." method="_on_exit_game_pressed"]

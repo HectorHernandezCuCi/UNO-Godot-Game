@@ -58,8 +58,10 @@
 [ext_resource type="Texture2D" uid="uid://b24wmlp554dd7" path="res://assets/Cards/Yellow Reverse- 2.png" id="53_q06ge"]
 [ext_resource type="Texture2D" uid="uid://c1kss3vd1lba3" path="res://assets/Cards/Wild-4.png" id="54_1n1aq"]
 [ext_resource type="Texture2D" uid="uid://b3asmyiny17dm" path="res://assets/Cards/Draw4-4.png" id="55_3cdyq"]
+[ext_resource type="PackedScene" uid="uid://cjbelt7gme88w" path="res://scenes/Menus/PauseMenu.tscn" id="57_4xh86"]
 
 [node name="Main" type="Node2D" unique_id=576415975]
+process_mode = 1
 script = ExtResource("1_3cdyq")
 color_selector_scene = ExtResource("2_nbusw")
 uno_button_scene = ExtResource("3_lbtv0")
@@ -742,3 +744,8 @@ texture = ExtResource("55_3cdyq")
 card_color = 4
 card_type = 4
 card_value = 0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1698475352]
+
+[node name="PauseMenu" parent="CanvasLayer" unique_id=779015376 instance=ExtResource("57_4xh86")]
+visible = false
