@@ -863,82 +863,120 @@ func reorganize_hand():
 		card.z_index = 100 + i
 
 func request_play_card(card):
-	"""Attempts to play a card from hand"""
+	"""Attempts to play a card from hand (ROBUST VERSION)"""
+
+	# ─────────────────────────────
+	# VALIDACIONES DURAS
+	# ─────────────────────────────
 	if not game_active:
-		push_warning("Cannot play - game not active!")
 		return
-	
+
 	if current_turn != Turn.PLAYER:
-		push_warning("Cannot play - not player's turn!")
 		return
-	
+
 	if card == null or not is_instance_valid(card):
 		push_error("Invalid card!")
 		return
-	
+
 	if is_processing_play:
 		return
-	
+
 	if is_waiting_for_color:
-		push_warning("Cannot play - waiting for color selection!")
 		return
-	
-	if not "is_in_hand" in card or not card.is_in_hand:
-		push_warning("Card is not in hand!")
+
+	if not ("is_in_hand" in card and card.is_in_hand):
 		return
-	
+
 	if card != hovered_card:
 		return
-	
-	if not card in hand:
-		push_warning("Card not found in hand array!")
+
+	if not hand.has(card):
 		return
-	
-	if discard_pile.size() == 0:
-		push_error("Discard pile is empty!")
+
+	if discard_pile.is_empty():
+		push_error("Discard pile empty!")
 		return
-	
+
 	var top_card = discard_pile.back()
 	if top_card == null or not is_instance_valid(top_card):
-		push_error("Top card is invalid!")
+		push_error("Invalid top card!")
 		return
-	
-	if not "card_color" in card or not "card_value" in card:
+
+	if not ("card_color" in card and "card_value" in card and "card_type" in card):
 		push_error("Card missing properties!")
 		return
-	
-	if not "card_color" in top_card or not "card_value" in top_card:
+
+	if not ("card_color" in top_card and "card_value" in top_card):
 		push_error("Top card missing properties!")
 		return
-	
-	var is_wild = card.card_color >= 4
-	var matches_color = card.card_color == top_card.card_color
-	var matches_value = card.card_value == top_card.card_value
-	var can_play = is_wild or matches_color or matches_value
-	
-	print("DEBUG PLAY: is_wild=%s, matches_color=%s, matches_value=%s, can_play=%s" % [is_wild, matches_color, matches_value, can_play])
-	
-	is_processing_play = true
-	
-	if can_play:
-		if is_wild:
-			_start_color_selection(card)
-		else:
-			_play_to_discard(card)
-			card_played.emit(card, Turn.PLAYER)
 
-			if card.card_type == card.CardType.DRAW2:
-				_apply_draw_two(Turn.AI)
-				end_player_turn()
-				return
+	# ─────────────────────────────
+	# REGLAS DE JUGADA
+	# ─────────────────────────────
+	var is_wild: bool = card.card_color >= 4
+	var matches_color: bool = card.card_color == top_card.card_color
+	var matches_value: bool = card.card_value == top_card.card_value
+	var can_play: bool = is_wild or matches_color or matches_value
 
-			_check_uno_status()
-			end_player_turn()
-	else:
+
+	if not can_play:
 		_shake_card(card)
-		print("Cannot play this card!")
-	
+		return
+
+	# ─────────────────────────────
+	# BLOQUEO DE INPUT
+	# ─────────────────────────────
+	is_processing_play = true
+
+	# ─────────────────────────────
+	# WILD → selección de color (sale aquí)
+	# ─────────────────────────────
+	if is_wild:
+		_start_color_selection(card)
+		is_processing_play = false
+		return
+
+	# ─────────────────────────────
+	# JUGAR CARTA NORMAL
+	# ─────────────────────────────
+	_play_to_discard(card)
+	card_played.emit(card, Turn.PLAYER)
+
+	# ─────────────────────────────
+	# EFECTOS DE CARTAS
+	# ─────────────────────────────
+	match card.card_type:
+
+		card.CardType.DRAW2:
+			_apply_draw_two(Turn.AI)
+			is_processing_play = false
+			return
+
+		card.CardType.DRAW4:
+			_apply_draw_four(Turn.AI)
+			is_processing_play = false
+			return
+
+		card.CardType.SKIP:
+			_apply_skip(Turn.AI)
+			is_processing_play = false
+			return
+
+		card.CardType.REVERSE:
+			# En 1v1 = SKIP
+			_apply_reverse()
+			is_processing_play = false
+			return
+
+		_:
+			pass # carta normal
+
+	# ─────────────────────────────
+	# FLUJO NORMAL
+	# ─────────────────────────────
+	_check_uno_status()
 	is_processing_play = false
+	end_player_turn()
 
 # ============================================================================
 # AI CARD PLAYING
@@ -1247,11 +1285,22 @@ func _skip_turn(target: Turn):
 
 # Funciones auxiliares para organizar el flujo
 func _start_ai_turn():
+	if ai_turn_skipped:
+		print("AI turn skipped after player action")
+		ai_turn_skipped = false
+		current_turn = Turn.PLAYER
+		_display_turn_indicator()
+		return
+
+
 	current_turn = Turn.AI
 	_display_turn_indicator()
+
 	await get_tree().create_timer(0.8).timeout
+
 	if ai_player and game_active:
 		ai_player.take_turn(discard_pile.back(), self)
+
 
 func _start_player_turn():
 	current_turn = Turn.PLAYER
