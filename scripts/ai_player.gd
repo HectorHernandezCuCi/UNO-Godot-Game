@@ -132,22 +132,30 @@ func _hard_strategy(playable_cards: Array, top_card) -> Variant:
 
 func _play_card(card, deck_manager) -> void:
 	"""Executes playing a card"""
-	if card == null:
+	
+	# Seguridad
+	if card == null or not is_instance_valid(card):
 		ai_turn_complete.emit()
 		return
-	
+
+	# Quitar carta de la mano de la AI
 	hand.erase(card)
 	
-	# Handle wild cards
+	# Wild / Wild +4
 	if card.card_color >= 4:
-		var chosen_color = _choose_wild_color()
+		var chosen_color := _choose_wild_color()
 		card.card_color = chosen_color
 		deck_manager.ai_play_wild_card(card, chosen_color)
 	else:
+		# Number, Skip, Reverse, Draw2
 		deck_manager.ai_play_card(card)
-	
+
+	# Pequeño delay para animación/feedback
 	await get_tree().create_timer(0.3).timeout
+
+	# Notificar que la AI terminó su turno
 	ai_turn_complete.emit()
+
 
 func _choose_wild_color() -> int:
 	"""AI chooses a color for wild cards based on hand composition"""
