@@ -59,11 +59,6 @@
 [ext_resource type="Texture2D" uid="uid://c1kss3vd1lba3" path="res://assets/Cards/Wild-4.png" id="54_1n1aq"]
 [ext_resource type="Texture2D" uid="uid://b3asmyiny17dm" path="res://assets/Cards/Draw4-4.png" id="55_3cdyq"]
 [ext_resource type="PackedScene" uid="uid://cjbelt7gme88w" path="res://scenes/Menus/PauseMenu/PauseMenu.tscn" id="57_4xh86"]
-[ext_resource type="AudioStream" uid="uid://cp0n5xlvo486e" path="res://assets/audios/tuco-get-out.wav" id="60_km8x7"]
-[ext_resource type="AudioStream" uid="uid://bdvappwtjfkxy" path="res://assets/audios/reverse-funk-tiktok-3.wav" id="61_5fhm6"]
-[ext_resource type="AudioStream" uid="uid://bwcnbvi33jfr2" path="res://assets/audios/nuke-bomb.wav" id="62_2you4"]
-[ext_resource type="AudioStream" uid="uid://dahnyci1wls8w" path="res://assets/audios/cat-laugh-meme-1.wav" id="63_yacnq"]
-[ext_resource type="AudioStream" uid="uid://b43taq6qhjmjr" path="res://assets/audios/piuw.wav" id="64_yacnq"]
 
 [node name="Main" type="Node2D" unique_id=576415975]
 process_mode = 1
@@ -754,18 +749,3 @@ card_value = 0
 
 [node name="PauseMenu" parent="CanvasLayer" unique_id=779015376 instance=ExtResource("57_4xh86")]
 visible = false
-
-[node name="UnoSkipSound" type="AudioStreamPlayer" parent="CanvasLayer" unique_id=50766069]
-stream = ExtResource("60_km8x7")
-
-[node name="UnoReverseSound" type="AudioStreamPlayer" parent="CanvasLayer" unique_id=937811250]
-stream = ExtResource("61_5fhm6")
-
-[node name="Uno+4SoundPlayer" type="AudioStreamPlayer" parent="CanvasLayer" unique_id=65827347]
-stream = ExtResource("62_2you4")
-
-[node name="Uno+4SoundAI" type="AudioStreamPlayer" parent="CanvasLayer" unique_id=93455505]
-stream = ExtResource("63_yacnq")
-
-[node name="Uno+2Sound" type="AudioStreamPlayer" parent="CanvasLayer" unique_id=1777505670]
-stream = ExtResource("64_yacnq")

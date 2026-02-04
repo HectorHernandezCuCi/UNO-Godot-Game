@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://oyp0msm12lot"]
 
 [ext_resource type="Script" uid="uid://ec27q1c5nnl0" path="res://scripts/uno_announcement.gd" id="1_giwft"]
+[ext_resource type="AudioStream" uid="uid://clm0a4t1a05qj" path="res://assets/audios/999-social-credit-siren.wav" id="2_wy4is"]
 
 [node name="UnoAnnouncement" type="CanvasLayer" unique_id=1036883556]
 script = ExtResource("1_giwft")
@@ -18,3 +19,9 @@ offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
 text = "!UNO!"
+
+[node name="UnoSoundPlayer" type="AudioStreamPlayer2D" parent="." unique_id=1929936233]
+stream = ExtResource("2_wy4is")
+
+[node name="UnoSoundAI" type="AudioStreamPlayer2D" parent="." unique_id=1056903489]
+stream = ExtResource("2_wy4is")
