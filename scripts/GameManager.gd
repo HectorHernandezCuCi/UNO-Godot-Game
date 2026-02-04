@@ -110,10 +110,25 @@ var uno_button_visible: bool = false
 
 var ai_visual_cards: Array = []
 
+@onready var uno_skip_sound: AudioStreamPlayer = $CanvasLayer/UnoSkipSound
+@onready var uno_reverse_sound: AudioStreamPlayer = $CanvasLayer/UnoReverseSound
+@onready var uno_plus_4_sound_player: AudioStreamPlayer = $"CanvasLayer/Uno+4SoundPlayer"
+@onready var uno_plus_4_sound_ai: AudioStreamPlayer = $"CanvasLayer/Uno+4SoundAI"
+@onready var uno_plus_2_sound: AudioStreamPlayer = $"CanvasLayer/Uno+2Sound"
+
+
 # ============================================================================
 # INITIALIZATION
 # ============================================================================
 
+func _play_sound(player: AudioStreamPlayer):
+	if not player:
+		return
+	
+	if player.playing:
+		player.stop()
+	player.play()
+	
 func _ready():
 	_validate_setup()
 	_setup_ai_visual_hand()
@@ -949,22 +964,27 @@ func request_play_card(card):
 
 		card.CardType.DRAW2:
 			_apply_draw_two(Turn.AI)
+			_play_sound(uno_plus_2_sound)
+			_play_sound(uno_plus_2_sound)
 			is_processing_play = false
 			return
 
 		card.CardType.DRAW4:
 			_apply_draw_four(Turn.AI)
+			_play_sound(uno_plus_4_sound_ai)
 			is_processing_play = false
 			return
 
 		card.CardType.SKIP:
 			_apply_skip(Turn.AI)
+			_play_sound(uno_skip_sound)
 			is_processing_play = false
 			return
 
 		card.CardType.REVERSE:
 			# En 1v1 = SKIP
 			_apply_reverse()
+			_play_sound(uno_reverse_sound)
 			is_processing_play = false
 			return
 
@@ -1014,14 +1034,19 @@ func ai_play_card(card):
 	match card.card_type:
 		card.CardType.DRAW2:
 			_apply_draw_two(Turn.PLAYER)
+			_play_sound(uno_plus_2_sound)
+			_play_sound(uno_plus_2_sound)
 
 		card.CardType.SKIP:
 			_skip_turn(Turn.PLAYER)
+			_play_sound(uno_skip_sound)
 
 		card.CardType.REVERSE:
+			_play_sound(uno_reverse_sound)
 			_apply_reverse()
 
 		card.CardType.DRAW4:
+			_play_sound(uno_plus_4_sound_player)
 			_apply_draw_four(Turn.PLAYER)
 
 		card.CardType.WILD_COLOR:

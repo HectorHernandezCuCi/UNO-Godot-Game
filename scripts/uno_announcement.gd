@@ -4,6 +4,9 @@ extends CanvasLayer
 @onready var animation_player = $AnimationPlayer
 @onready var particles = $Particles  # Opcional: agrega partículas
 @onready var glow = $Glow  # Opcional: efecto de resplandor
+@onready var uno_sound_player: AudioStreamPlayer2D = $UnoSoundPlayer
+@onready var uno_sound_ai: AudioStreamPlayer2D = $UnoSoundAI
+
 
 # Colores para diferentes estados
 const COLOR_UNO = Color(1.0, 0.85, 0.0)  # Dorado
@@ -14,10 +17,19 @@ func _ready():
 	if label:
 		label.visible = false
 		label.modulate = Color.WHITE
+		
+func _play_uno_sound(player: AudioStreamPlayer2D):
+	if not player:
+		return
+	
+	if player.playing:
+		player.stop()
+	player.play()
 
 func show_uno_announcement(player_name: String = "TÚ"):
-	"""Shows big UNO announcement on screen with professional effects"""
 	if label:
+		_play_uno_sound(uno_sound_player)
+
 		label.text = "¡%s DIJISTE UNO!" % player_name
 		label.modulate = COLOR_UNO
 		label.visible = true
@@ -27,17 +39,22 @@ func show_uno_announcement(player_name: String = "TÚ"):
 		else:
 			_play_professional_animation(COLOR_UNO, 3.5)
 
+
+
 func show_ai_uno():
-	"""Shows AI UNO announcement with different color"""
 	if label:
 		label.text = "¡LA IA DIJO UNO!"
 		label.modulate = COLOR_AI
 		label.visible = true
 		
+		if uno_sound_ai:
+			uno_sound_ai.play()
+
 		if animation_player and animation_player.has_animation("announce"):
 			animation_player.play("announce")
 		else:
 			_play_professional_animation(COLOR_AI, 3.5)
+
 
 func show_penalty_message():
 	"""Shows penalty message when player forgot to say UNO"""
