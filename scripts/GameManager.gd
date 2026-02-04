@@ -88,6 +88,9 @@ var game_active: bool = false
 enum Turn { PLAYER, AI }
 var current_turn: Turn = Turn.PLAYER
 var ai_player: AIPlayer = null
+var player_turn_skipped: bool = false
+var ai_turn_skipped: bool = false
+
 
 # ============================================================================
 # UNO SYSTEM
@@ -919,11 +922,16 @@ func request_play_card(card):
 	
 	if can_play:
 		if is_wild:
-			print(">>> PLAYING WILD CARD - STARTING SELECTION <<<")
 			_start_color_selection(card)
 		else:
 			_play_to_discard(card)
 			card_played.emit(card, Turn.PLAYER)
+
+			if card.card_type == card.CardType.DRAW2:
+				_apply_draw_two(Turn.AI)
+				end_player_turn()
+				return
+
 			_check_uno_status()
 			end_player_turn()
 	else:
@@ -935,27 +943,53 @@ func request_play_card(card):
 # ============================================================================
 # AI CARD PLAYING
 # ============================================================================
-
 func ai_play_card(card):
 	"""Plays an AI card to discard pile with visual feedback"""
+
+	# Seguridad
 	if card == null or not is_instance_valid(card):
 		push_error("AI tried to play invalid card!")
 		return
-	
+
+	# Animación carta AI
 	if show_ai_card_backs and enable_ai_animations:
 		_animate_ai_play_card()
-	
+
+	# Añadir al descarte
 	discard_pile.append(card)
-	
+
 	card.visible = true
 	var tween = create_tween().set_parallel(true)
-	tween.tween_property(card, "position", discard_position, 0.4)\
+	tween.tween_property(card, "position", discard_position, 0.4) \
 		.set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
 	tween.tween_property(card, "rotation", randf_range(-0.2, 0.2), 0.3)
 	tween.tween_property(card, "scale", Vector2.ONE, 0.3)
-	
+
 	card.z_index = discard_pile.size()
+
+	# Notificar carta jugada
 	card_played.emit(card, Turn.AI)
+
+	# ─────────────────────────────
+	# APLICAR EFECTOS (AQUÍ SÍ)
+	# ─────────────────────────────
+	match card.card_type:
+		card.CardType.DRAW2:
+			_apply_draw_two(Turn.PLAYER)
+
+		card.CardType.SKIP:
+			_skip_turn(Turn.PLAYER)
+
+		card.CardType.REVERSE:
+			_apply_reverse()
+
+		card.CardType.DRAW4:
+			_apply_draw_four(Turn.PLAYER)
+
+		card.CardType.WILD_COLOR:
+			pass # solo cambia color, ya manejado
+
+
 
 func ai_play_wild_card(card, chosen_color: int):
 	"""Plays an AI wild card with visual feedback"""
@@ -1198,3 +1232,94 @@ func _unhandled_input(event: InputEvent) -> void:
 		print("ESC detectado en GameManager")
 		SceneManager.pause_game(not get_tree().paused)
 		get_viewport().set_input_as_handled()
+		
+func _skip_turn(target: Turn):
+	if target == Turn.PLAYER:
+		player_turn_skipped = true
+		print("Player turn will be skipped.")
+		# Como el jugador fue saltado, pasamos el control a la IA
+		_start_ai_turn() 
+	else:
+		ai_turn_skipped = true
+		print("AI turn will be skipped.")
+		# Como la IA fue saltada, devolvemos el control al jugador
+		_start_player_turn()
+
+# Funciones auxiliares para organizar el flujo
+func _start_ai_turn():
+	current_turn = Turn.AI
+	_display_turn_indicator()
+	await get_tree().create_timer(0.8).timeout
+	if ai_player and game_active:
+		ai_player.take_turn(discard_pile.back(), self)
+
+func _start_player_turn():
+	current_turn = Turn.PLAYER
+	_display_turn_indicator()
+	is_processing_play = false # Desbloqueamos el input del jugador
+
+func _reshuffle_discard_into_deck():
+	print(">>> Reshuffling discard pile into deck...")
+	
+	# Keep the top card so the game can continue
+	var top_card = discard_pile.pop_back()
+	
+	# Move everything else back to deck
+	while discard_pile.size() > 0:
+		var card = discard_pile.pop_back()
+		card.visible = false # Hide cards going back to deck
+		card.position = deck_position
+		deck.append(card)
+	
+	deck.shuffle()
+	
+	# Put the top card back on the discard pile
+	discard_pile.append(top_card)
+	print(">>> Deck refilled with %d cards." % deck.size())
+
+func _apply_draw_two(target: Turn):
+	print(">>> DRAW +2 applied to ", target)
+
+	for i in range(2):
+		if deck.size() == 0:
+			# Si el mazo está vacío, intentamos rellenarlo o cancelamos el robo
+			if discard_pile.size() > 1:
+				_reshuffle_discard_into_deck() # Implementa esta función si no la tienes
+			else:
+				push_warning("Deck empty during +2")
+				break # IMPORTANTE: break permite que el código siga hacia _skip_turn
+
+		if target == Turn.PLAYER:
+			_deal_card_to_player()
+		else:
+			_deal_card_to_ai()
+
+	# Una vez dadas las cartas, saltamos el turno del afectado
+	_skip_turn(target)
+
+
+
+func _apply_draw_four(target: Turn):
+	print(">>> DRAW +4 applied to ", target)
+
+	for i in range(4):
+		if deck.size() == 0:
+			push_warning("Deck empty during +4")
+			return
+
+		if target == Turn.PLAYER:
+			_deal_card_to_player()
+		else:
+			_deal_card_to_ai()
+
+	_skip_turn(target)
+	
+func _apply_skip(target: Turn):
+	print(">>> SKIP applied to ", target)
+	_skip_turn(target)
+
+func _apply_reverse():
+	print(">>> REVERSE applied")
+
+	# En 1v1 (Player vs AI), reverse = skip
+	_skip_turn(Turn.PLAYER)
