@@ -490,42 +490,6 @@ func _reset_cards_to_deck():
 		card.is_in_hand = false
 		card.visible = true
 
-func _deal_card_to_player() -> bool:
-	"""Deals one card to player hand, returns true if successful"""
-	if deck.size() == 0:
-		return false
-	
-	var card = deck.pop_back()
-	if card == null or not is_instance_valid(card):
-		push_error("Invalid card drawn from deck!")
-		return false
-	
-	hand.append(card)
-	card.is_in_hand = true
-	card.visible = true
-	reorganize_hand()
-	
-	return true
-
-func _deal_card_to_ai() -> bool:
-	"""Deals one card to AI hand with visual feedback"""
-	if deck.size() == 0 or ai_player == null:
-		return false
-	
-	var card = deck.pop_back()
-	if card == null or not is_instance_valid(card):
-		push_error("Invalid card drawn from deck!")
-		return false
-	
-	ai_player.add_card(card)
-	card.position = ai_hand_center_pos
-	card.visible = false
-	
-	if show_ai_card_backs:
-		_animate_ai_draw_card()
-	
-	return true
-
 # ============================================================================
 # UNO CALL SYSTEM
 # ============================================================================
@@ -687,15 +651,6 @@ func _ai_call_uno():
 # TURN MANAGEMENT
 # ============================================================================
 
-func _display_turn_indicator():
-	"""Displays current turn information"""
-	if current_turn == Turn.PLAYER:
-		print(">>> YOUR TURN <<<")
-	else:
-		print(">>> AI TURN <<<")
-	
-	turn_changed.emit(current_turn)
-
 func end_player_turn():
 	"""Ends player turn and starts AI turn"""
 	if not game_active:
@@ -790,20 +745,14 @@ func check_top_card_wild():
 	if top_card.card_color >= 4 and not is_waiting_for_color:
 		print(">>> WILD CARD DETECTED - STARTING COLOR SELECTION <<<")
 		_start_color_selection(top_card)
-
 func draw_card_to_hand():
-	"""Draws a card from deck to player hand"""
+	"""Draws cards from deck to player hand until getting a playable card"""
 	if not game_active:
 		push_warning("Cannot draw - game not active!")
 		return
 	
 	if current_turn != Turn.PLAYER:
 		push_warning("Cannot draw - not player's turn!")
-		return
-	
-	if deck.size() == 0:
-		push_warning("Cannot draw - deck is empty!")
-		end_player_turn()
 		return
 	
 	if is_waiting_for_color:
@@ -814,13 +763,141 @@ func draw_card_to_hand():
 		push_warning("Cannot draw - currently processing a play!")
 		return
 	
-	if _deal_card_to_player():
-		print("Drew 1 card from deck (%d remaining)" % deck.size())
-		_check_uno_status()
-		end_player_turn()
-	else:
-		push_error("Failed to draw card!")
+	# Bloquear interacción mientras roba
+	is_processing_play = true
+	
+	var max_draws = 20 # Límite de seguridad
+	var draws_count = 0
+	var drawn_playable_card = false
+	var playable_card = null  # ← NUEVA VARIABLE para guardar la carta jugable
+	
+	# Obtener la carta del centro
+	if discard_pile.is_empty():
+		push_error("Cannot draw - discard pile is empty!")
+		is_processing_play = false
+		return
+	
+	var top_card = discard_pile.back()
+	if top_card == null or not is_instance_valid(top_card):
+		push_error("Top card is invalid!")
+		is_processing_play = false
+		return
+	
+	# Robar hasta conseguir carta jugable
+	while draws_count < max_draws and not drawn_playable_card:
+		if deck.size() == 0:
+			# Intenta reorganizar el mazo
+			if discard_pile.size() > 1:
+				_reshuffle_discard_into_deck()
+			else:
+				push_warning("Cannot draw - deck is empty and cannot reshuffle!")
+				break
+		
+		# Robar una carta
+		if _deal_card_to_player():
+			draws_count += 1
+			var drawn_card = hand.back() # La última carta agregada
+			
+			print("Drew card %d from deck (%d remaining)" % [draws_count, deck.size()])
+			
+			# Pequeño delay para ver la animación
+			await get_tree().create_timer(0.5).timeout
+			
+			# Verificar si la carta robada es jugable
+			if _can_play_card_on_top(drawn_card, top_card):
+				print(">>> Found playable card after %d draws! <<<" % draws_count)
+				drawn_playable_card = true
+				playable_card = drawn_card  # ← GUARDAR la carta jugable
+				break
+			else:
+				print("Card not playable, drawing another...")
+		else:
+			push_error("Failed to draw card!")
+			break
+	
+	if draws_count >= max_draws:
+		push_warning("Reached maximum draws (%d) without finding playable card!" % max_draws)
+	
+	# ═══════════════════════════════════════════════════════════════
+	# SI ENCONTRÓ UNA CARTA JUGABLE, LA JUEGA AUTOMÁTICAMENTE
+	# ═══════════════════════════════════════════════════════════════
+	if playable_card != null and is_instance_valid(playable_card):
+		print(">>> Auto-playing the playable card found <<<")
+		
+		# Pequeño delay para que el jugador vea la carta en su mano
+		await get_tree().create_timer(0.5).timeout
+		
+		# Verificar si es WILD card (necesita selección de color)
+		if playable_card.card_color >= 4:
+			_start_color_selection(playable_card)
+			is_processing_play = false
+			# No llamamos end_player_turn aquí porque _start_color_selection lo hace
+			return
+		
+		# Si NO es wild, la jugamos directamente
+		_play_to_discard(playable_card)
+		card_played.emit(playable_card, Turn.PLAYER)
+		
+		# Aplicar efectos de la carta
+		match playable_card.card_type:
+			playable_card.CardType.DRAW2:
+				_apply_draw_two(Turn.AI)
+				_play_sound(uno_plus_2_sound)
+				_check_uno_status()
+				is_processing_play = false
+				return  # El turno ya se saltó en _apply_draw_two
+			
+			playable_card.CardType.DRAW4:
+				_apply_draw_four(Turn.AI)
+				_play_sound(uno_plus_4_sound_ai)
+				_check_uno_status()
+				is_processing_play = false
+				return  # El turno ya se saltó en _apply_draw_four
+			
+			playable_card.CardType.SKIP:
+				_apply_skip(Turn.AI)
+				_play_sound(uno_skip_sound)
+				_check_uno_status()
+				is_processing_play = false
+				return  # El turno ya se saltó en _apply_skip
+			
+			playable_card.CardType.REVERSE:
+				_apply_reverse()
+				_play_sound(uno_reverse_sound)
+				_check_uno_status()
+				is_processing_play = false
+				return  # El turno ya se saltó en _apply_reverse
+			
+			_:
+				# Carta normal (número)
+				pass
+	
+	# Si llegamos aquí, o no encontró carta jugable, o jugó una carta normal
+	_check_uno_status()
+	is_processing_play = false
+	end_player_turn()
 
+func _can_play_card_on_top(card, top_card) -> bool:
+	"""Verifica si una carta puede jugarse sobre top_card"""
+	if card == null or not is_instance_valid(card):
+		return false
+	
+	if top_card == null or not is_instance_valid(top_card):
+		return false
+	
+	if not ("card_color" in card and "card_value" in card):
+		return false
+	
+	if not ("card_color" in top_card and "card_value" in top_card):
+		return false
+	
+	# Wild cards siempre se pueden jugar
+	if card.card_color >= 4:
+		return true
+	
+	# Coincide color o valor
+	return card.card_color == top_card.card_color or card.card_value == top_card.card_value
+	
 func draw_card_for_ai(ai: AIPlayer):
 	"""Draws a card for AI player with visual feedback"""
 	if ai == null or not is_instance_valid(ai):
@@ -1285,115 +1362,334 @@ func get_current_turn() -> Turn:
 	"""Returns current turn"""
 	return current_turn
 
+# ============================================================================
+# GAME STATE
+# ============================================================================
+
 func is_game_active() -> bool:
-	"""Returns if game is active"""
-	return game_active
-	
-#Function to pause game
+	"""Returns if game is active with validation"""
+	return game_active and is_inside_tree() and not get_tree().paused
+
+# ============================================================================
+# INPUT HANDLING
+# ============================================================================
+
 func _unhandled_input(event: InputEvent) -> void:
+	if not event or not is_instance_valid(event):
+		return
+		
 	if event.is_action_pressed("Pause"):
 		print("ESC detectado en GameManager")
-		SceneManager.pause_game(not get_tree().paused)
+		_toggle_pause()
 		get_viewport().set_input_as_handled()
-		
-func _skip_turn(target: Turn):
-	if target == Turn.PLAYER:
-		player_turn_skipped = true
-		print("Player turn will be skipped.")
-		# Como el jugador fue saltado, pasamos el control a la IA
-		_start_ai_turn() 
-	else:
-		ai_turn_skipped = true
-		print("AI turn will be skipped.")
-		# Como la IA fue saltada, devolvemos el control al jugador
-		_start_player_turn()
 
-# Funciones auxiliares para organizar el flujo
-func _start_ai_turn():
-	if ai_turn_skipped:
-		print("AI turn skipped after player action")
-		ai_turn_skipped = false
-		current_turn = Turn.PLAYER
-		_display_turn_indicator()
+func _toggle_pause() -> void:
+	if not SceneManager:
+		push_error("SceneManager not available for pause")
 		return
+		
+	var tree = get_tree()
+	if not tree:
+		return
+		
+	var new_pause_state = not tree.paused
+	SceneManager.pause_game(new_pause_state)
+	print("Game %s" % ["paused" if new_pause_state else "resumed"])
 
+# ============================================================================
+# TURN MANAGEMENT
+# ============================================================================
 
+func _skip_turn(target: Turn) -> void:
+	if not _validate_turn_operation(target):
+		return
+		
+	match target:
+		Turn.PLAYER:
+			player_turn_skipped = true
+			print("  └─ Player turn will be skipped")
+			_start_ai_turn()
+			
+		Turn.AI:
+			ai_turn_skipped = true
+			print("  └─ AI turn will be skipped")
+			_start_player_turn()
+			
+		_:
+			push_warning("Invalid turn target for skip: %s" % target)
+
+func _start_ai_turn() -> void:
+	if not is_game_active():
+		print("Cannot start AI turn: game not active")
+		return
+		
+	# Check if AI turn should be skipped
+	if ai_turn_skipped:
+		print("  └─ AI turn skipped, returning to player")
+		ai_turn_skipped = false
+		_start_player_turn()
+		return
+	
+	# Validate AI player exists
+	if not ai_player or not is_instance_valid(ai_player):
+		push_error("AI player not available")
+		_start_player_turn()
+		return
+	
+	# Validate discard pile
+	if discard_pile.is_empty():
+		push_error("Cannot start AI turn: discard pile empty")
+		return
+	
+	# Start AI turn
 	current_turn = Turn.AI
 	_display_turn_indicator()
-
+	
+	# Wait before AI plays
 	await get_tree().create_timer(0.8).timeout
+	
+	# Double-check game is still active after await
+	if not is_game_active():
+		return
+		
+	ai_player.take_turn(discard_pile.back(), self)
 
-	if ai_player and game_active:
-		ai_player.take_turn(discard_pile.back(), self)
-
-
-func _start_player_turn():
+func _start_player_turn() -> void:
+	if not is_game_active():
+		print("Cannot start player turn: game not active")
+		return
+		
+	# Check if player turn should be skipped
+	if player_turn_skipped:
+		print("  └─ Player turn skipped, going to AI")
+		player_turn_skipped = false
+		_start_ai_turn()
+		return
+	
+	# Start player turn
 	current_turn = Turn.PLAYER
+	is_processing_play = false
 	_display_turn_indicator()
-	is_processing_play = false # Desbloqueamos el input del jugador
+	print("  └─ Player turn started")
 
-func _reshuffle_discard_into_deck():
+# ============================================================================
+# DECK MANAGEMENT
+# ============================================================================
+
+func _reshuffle_discard_into_deck() -> bool:
 	print(">>> Reshuffling discard pile into deck...")
 	
-	# Keep the top card so the game can continue
+	# Validate we have enough cards to reshuffle
+	if discard_pile.size() <= 1:
+		push_warning("Cannot reshuffle: not enough cards in discard pile")
+		return false
+	
+	# Keep the top card
 	var top_card = discard_pile.pop_back()
 	
-	# Move everything else back to deck
+	if not is_instance_valid(top_card):
+		push_error("Top card is invalid during reshuffle")
+		return false
+	
+	# Move cards back to deck
+	var cards_moved = 0
 	while discard_pile.size() > 0:
 		var card = discard_pile.pop_back()
-		card.visible = false # Hide cards going back to deck
+		
+		if not is_instance_valid(card):
+			push_warning("Invalid card found during reshuffle, skipping")
+			continue
+			
+		card.visible = false
 		card.position = deck_position
 		deck.append(card)
+		cards_moved += 1
 	
+	# Shuffle deck
 	deck.shuffle()
 	
-	# Put the top card back on the discard pile
+	# Restore top card
 	discard_pile.append(top_card)
-	print(">>> Deck refilled with %d cards." % deck.size())
-
-func _apply_draw_two(target: Turn):
-	print(">>> DRAW +2 applied to ", target)
-
-	for i in range(2):
-		if deck.size() == 0:
-			# Si el mazo está vacío, intentamos rellenarlo o cancelamos el robo
-			if discard_pile.size() > 1:
-				_reshuffle_discard_into_deck() # Implementa esta función si no la tienes
-			else:
-				push_warning("Deck empty during +2")
-				break # IMPORTANTE: break permite que el código siga hacia _skip_turn
-
-		if target == Turn.PLAYER:
-			_deal_card_to_player()
-		else:
-			_deal_card_to_ai()
-
-	# Una vez dadas las cartas, saltamos el turno del afectado
-	_skip_turn(target)
-
-
-
-func _apply_draw_four(target: Turn):
-	print(">>> DRAW +4 applied to ", target)
-
-	for i in range(4):
-		if deck.size() == 0:
-			push_warning("Deck empty during +4")
-			return
-
-		if target == Turn.PLAYER:
-			_deal_card_to_player()
-		else:
-			_deal_card_to_ai()
-
-	_skip_turn(target)
 	
-func _apply_skip(target: Turn):
-	print(">>> SKIP applied to ", target)
+	print("  └─ Deck refilled with %d cards" % cards_moved)
+	return true
+
+# ============================================================================
+# SPECIAL CARD EFFECTS
+# ============================================================================
+
+func _apply_draw_two(target: Turn) -> void:
+	print(">>> DRAW +2 applied to %s" % _turn_to_string(target))
+	
+	if not _validate_turn_operation(target):
+		return
+	
+	var cards_drawn = _draw_cards_for_target(target, 2)
+	
+	if cards_drawn < 2:
+		push_warning("Only drew %d/2 cards for Draw +2" % cards_drawn)
+	
 	_skip_turn(target)
 
-func _apply_reverse():
-	print(">>> REVERSE applied")
+func _apply_draw_four(target: Turn) -> void:
+	print(">>> DRAW +4 applied to %s" % _turn_to_string(target))
+	
+	if not _validate_turn_operation(target):
+		return
+	
+	var cards_drawn = _draw_cards_for_target(target, 4)
+	
+	if cards_drawn < 4:
+		push_warning("Only drew %d/4 cards for Draw +4" % cards_drawn)
+	
+	_skip_turn(target)
 
-	# En 1v1 (Player vs AI), reverse = skip
-	_skip_turn(Turn.PLAYER)
+func _apply_skip(target: Turn) -> void:
+	print(">>> SKIP applied to %s" % _turn_to_string(target))
+	
+	if not _validate_turn_operation(target):
+		return
+		
+	_skip_turn(target)
+
+func _apply_reverse() -> void:
+	print(">>> REVERSE applied")
+	
+	# Validate game state
+	if not is_game_active():
+		push_warning("Reverse played but game not active")
+		return
+	
+	# In 1v1, reverse acts as skip for the next player
+	var target = _get_next_turn_target()
+	print("  └─ 1v1 mode: REVERSE acts as SKIP for %s" % _turn_to_string(target))
+	_skip_turn(target)
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+func _validate_turn_operation(target: Turn) -> bool:
+	"""Validates if a turn operation can be performed"""
+	if not is_game_active():
+		push_warning("Turn operation attempted but game not active")
+		return false
+	
+	if target != Turn.PLAYER and target != Turn.AI:
+		push_error("Invalid turn target: %s" % target)
+		return false
+	
+	return true
+
+func _draw_cards_for_target(target: Turn, amount: int) -> int:
+	"""Draws specified amount of cards for target. Returns actual cards drawn."""
+	var cards_drawn = 0
+	
+	for i in range(amount):
+		# Check if deck needs reshuffling
+		if deck.is_empty():
+			if discard_pile.size() > 1:
+				if not _reshuffle_discard_into_deck():
+					push_warning("Failed to reshuffle deck")
+					break
+			else:
+				push_warning("Cannot draw card: deck and discard pile empty")
+				break
+		
+		# Draw card
+		var success = false
+		match target:
+			Turn.PLAYER:
+				success = _deal_card_to_player()
+			Turn.AI:
+				success = _deal_card_to_ai()
+		
+		if success:
+			cards_drawn += 1
+		else:
+			push_warning("Failed to deal card %d/%d" % [i + 1, amount])
+			break
+	
+	return cards_drawn
+
+func _deal_card_to_player() -> bool:
+	"""Deals one card to player. Returns true if successful."""
+	if deck.is_empty():
+		return false
+		
+	var card = deck.pop_back()
+	
+	if not is_instance_valid(card):
+		push_error("Invalid card drawn from deck")
+		return false
+	
+	# Add to player's hand array
+	card.visible = true
+	card.is_in_hand = true
+	hand.append(card)
+	
+	# Reorganize hand visually
+	reorganize_hand()
+	
+	print("  └─ Card dealt to player (hand size: %d)" % hand.size())
+	return true
+
+func _deal_card_to_ai() -> bool:
+	"""Deals one card to AI. Returns true if successful."""
+	if deck.is_empty():
+		return false
+		
+	var drawn_card = deck.pop_back()  # ← Cambié el nombre aquí
+	
+	if not is_instance_valid(drawn_card):
+		push_error("Invalid card drawn from deck")
+		return false
+	
+	# Validate AI player exists
+	if not ai_player or not is_instance_valid(ai_player):
+		push_error("AI player not available to receive card")
+		deck.append(drawn_card) # Return card to deck
+		return false
+	
+	# Hide card and give to AI
+	drawn_card.visible = false
+	
+	# Check if AI has add_card method
+	if ai_player.has_method("add_card"):
+		ai_player.add_card(drawn_card)
+	else:
+		push_warning("AI player doesn't have add_card method!")
+		return false
+	
+	# Update visual representation
+	if show_ai_card_backs:
+		_animate_ai_draw_card()
+	
+	print("  └─ Card dealt to AI (hand size: %d)" % ai_player.get_hand_size())
+	return true
+
+func _get_next_turn_target() -> Turn:
+	"""Returns the next player that would play"""
+	return Turn.AI if current_turn == Turn.PLAYER else Turn.PLAYER
+
+func _turn_to_string(turn: Turn) -> String:
+	"""Converts Turn enum to readable string"""
+	match turn:
+		Turn.PLAYER:
+			return "PLAYER"
+		Turn.AI:
+			return "AI"
+		_:
+			return "UNKNOWN"
+
+func _display_turn_indicator() -> void:
+	"""Updates UI to show whose turn it is"""
+	# Implementa tu lógica de UI aquí
+	if not is_game_active():
+		return
+		
+	match current_turn:
+		Turn.PLAYER:
+			print("  └─ [PLAYER TURN]")
+		Turn.AI:
+			print("  └─ [AI TURN]")

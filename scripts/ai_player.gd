@@ -19,17 +19,33 @@ func take_turn(top_card, deck_manager) -> void:
 		var chosen_card = _choose_card_to_play(playable_cards, top_card)
 		_play_card(chosen_card, deck_manager)
 	else:
-		# No playable cards - must draw
-		var drawn_card = deck_manager.draw_card_for_ai(self)
-		if drawn_card != null:
+		# No playable cards - must draw until getting a playable one
+		var drawn_card = null
+		var max_draws = 20 # Límite de seguridad para evitar bucle infinito
+		var draws_count = 0
+		
+		while draws_count < max_draws:
+			drawn_card = deck_manager.draw_card_for_ai(self)
+			
+			if drawn_card == null:
+				# No more cards in deck
+				break
+			
 			hand.append(drawn_card)
+			draws_count += 1
+			
+			# Delay visual entre robos
+			await get_tree().create_timer(0.5).timeout
 			
 			# Check if drawn card is playable
-			await get_tree().create_timer(0.5).timeout
 			if _can_play_card(drawn_card, top_card):
+				# Found a playable card!
 				if randf() > 0.3: # 70% chance to play immediately
 					_play_card(drawn_card, deck_manager)
 					return
+				else:
+					# AI decides to keep the card and end turn
+					break
 		
 		# Turn ends without playing
 		ai_turn_complete.emit()
