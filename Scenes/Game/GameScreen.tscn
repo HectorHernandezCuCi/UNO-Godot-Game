@@ -1,0 +1,467 @@
+[gd_scene load_steps=31 format=3 uid="uid://coxpmudniytrs"]
+
+[ext_resource type="Script" path="res://Scripts/Game Screen/GameScreen.gd" id="1_2ln60"]
+[ext_resource type="Script" path="res://Scripts/Game Screen/Game Hud/GameHud.gd" id="2_4neoy"]
+[ext_resource type="PackedScene" uid="uid://wjo01bdyjbix" path="res://Scenes/Game/PlayerHand.tscn" id="2_hpt1n"]
+[ext_resource type="Script" path="res://Scripts/Game Screen/DiscardPile.gd" id="3_1lq7h"]
+[ext_resource type="Texture2D" uid="uid://k6swaqfum4yh" path="res://Assets/Background/GrayStonyStuff.jpg" id="3_2xa2l"]
+[ext_resource type="Script" path="res://Scripts/Game Screen/Game Hud/CirclePointer.gd" id="3_hpjf7"]
+[ext_resource type="PackedScene" uid="uid://bunkc8qgqq3co" path="res://Scenes/Game/Deck.tscn" id="4_c27vo"]
+[ext_resource type="Shader" path="res://Assets/Shaders/BlurShader.gdshader" id="4_mpp7n"]
+[ext_resource type="PackedScene" uid="uid://drfnlr2ho0sas" path="res://Scenes/Game/HandManager.tscn" id="7_6vys6"]
+[ext_resource type="Script" path="res://Scripts/Game Screen/Game Hud/ColorSelector.gd" id="10_jfgc4"]
+[ext_resource type="Script" path="res://Scripts/Game Screen/Game Hud/GameOverScreen.gd" id="12_02t3e"]
+[ext_resource type="AudioStream" uid="uid://dvdddi6crt6y2" path="res://Assets/Audio/Sfx/Game/Card Sfx/Card Shuffle.wav" id="12_sx8a8"]
+
+[sub_resource type="Curve2D" id="Curve2D_emmi7"]
+_data = {
+"points": PackedVector2Array(398.585, -1.68179, -400, 0, 600, 600, 0, 0, 0, -200, 200, 400, 0, 0, 400, 0, 600, 200, 0, 0, 0, 200, 1000, 400, 0, 0, 0, 0, 600, 600)
+}
+point_count = 5
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_jk05y"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hckos"]
+shader = ExtResource("4_mpp7n")
+shader_parameter/blur_amount = 1.348
+shader_parameter/mix_amount = 0.124
+shader_parameter/color_over = Color(1, 1, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0vlb0"]
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mhv8r"]
+bg_color = Color(0, 0, 0, 0.231373)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_r6cy3"]
+resource_local_to_scene = true
+shader = ExtResource("4_mpp7n")
+shader_parameter/blur_amount = 1.618
+shader_parameter/mix_amount = 0.27
+shader_parameter/color_over = Color(1, 1, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f55kq"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_color = Color(0.811765, 0.8, 0.8, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dpb6v"]
+bg_color = Color(0, 0.764706, 0.898039, 0.756863)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0, 0.788235, 0.898039, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ro04n"]
+bg_color = Color(0.184314, 0.886275, 0.607843, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.25098, 0.670588, 0.498039, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5ccft"]
+bg_color = Color(0.960784, 0.392157, 0.384314, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.960784, 0.231373, 0.384314, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_chmkd"]
+bg_color = Color(0.968627, 0.890196, 0.34902, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.968627, 0.678431, 0.34902, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_spled"]
+bg_color = Color(0, 0, 0, 0.372549)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y2hvo"]
+bg_color = Color(1, 1, 1, 0.345098)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+expand_margin_left = 10.0
+expand_margin_right = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1tqon"]
+bg_color = Color(1, 1, 1, 0.345098)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+expand_margin_left = 20.0
+expand_margin_right = 20.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2hgvg"]
+bg_color = Color(1, 1, 1, 0.117647)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 0.392157)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+expand_margin_left = 20.0
+expand_margin_right = 20.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jcfdo"]
+bg_color = Color(1, 1, 1, 0.117647)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+expand_margin_left = 20.0
+expand_margin_right = 20.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w8bo4"]
+bg_color = Color(1, 1, 1, 0.117647)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 0.392157)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+expand_margin_left = 20.0
+expand_margin_right = 20.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kibcw"]
+bg_color = Color(1, 1, 1, 0.117647)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+expand_margin_left = 20.0
+expand_margin_right = 20.0
+
+[node name="GameScreen" type="Node2D"]
+script = ExtResource("1_2ln60")
+
+[node name="CardShuffleSfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("12_sx8a8")
+bus = &"Fx"
+
+[node name="GameHud" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1200.0
+offset_bottom = 800.0
+script = ExtResource("2_4neoy")
+
+[node name="Background" type="TextureRect" parent="GameHud"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_2xa2l")
+expand_mode = 3
+stretch_mode = 4
+
+[node name="TurnIndicatorPath" type="Path2D" parent="GameHud"]
+curve = SubResource("Curve2D_emmi7")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="GameHud/TurnIndicatorPath"]
+position = Vector2(600, 600)
+rotation = 3.14159
+
+[node name="Pointer" type="Polygon2D" parent="GameHud/TurnIndicatorPath/PathFollow2D"]
+scale = Vector2(0.25, 0.25)
+texture = SubResource("ViewportTexture_jk05y")
+script = ExtResource("3_hpjf7")
+
+[node name="TakeCardButton" type="Panel" parent="GameHud"]
+material = SubResource("ShaderMaterial_hckos")
+layout_mode = 0
+offset_left = 20.0
+offset_top = 724.0
+offset_right = 186.0
+offset_bottom = 779.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_0vlb0")
+
+[node name="TakeCardLabel" type="Label" parent="GameHud/TakeCardButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 17
+text = "Take Cards"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlayerHand" parent="." instance=ExtResource("2_hpt1n")]
+position = Vector2(600, 700)
+script = null
+
+[node name="HandManager" parent="PlayerHand" instance=ExtResource("7_6vys6")]
+hand_id = "Player's Hand"
+rotation_factor = 0.4
+spread_amount = 100
+
+[node name="Cpu1Hand" parent="." instance=ExtResource("2_hpt1n")]
+position = Vector2(100, 400)
+rotation = 1.5708
+script = null
+
+[node name="HandManager" parent="Cpu1Hand" instance=ExtResource("7_6vys6")]
+hand_id = "Cpu1's Hand"
+rotation_factor = 0.3
+spread_amount = 300
+
+[node name="Cpu2Hand" parent="." instance=ExtResource("2_hpt1n")]
+position = Vector2(600, 100)
+rotation = 3.14159
+script = null
+
+[node name="HandManager" parent="Cpu2Hand" instance=ExtResource("7_6vys6")]
+hand_id = "Cpu2's Hand"
+rotation_factor = 0.3
+spread_amount = 300
+
+[node name="Cpu3Hand" parent="." instance=ExtResource("2_hpt1n")]
+position = Vector2(1100, 400)
+rotation = 4.71239
+script = null
+
+[node name="HandManager" parent="Cpu3Hand" instance=ExtResource("7_6vys6")]
+hand_id = "Cpu3's Hand"
+rotation_factor = 0.3
+spread_amount = 300
+
+[node name="DiscardPile" type="Node2D" parent="."]
+position = Vector2(476, 400)
+script = ExtResource("3_1lq7h")
+
+[node name="Deck" parent="." instance=ExtResource("4_c27vo")]
+position = Vector2(676, 400)
+
+[node name="ColorSelector" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1200.0
+offset_bottom = 800.0
+script = ExtResource("10_jfgc4")
+background_color_transition_time = 0.5
+
+[node name="ColorSelectorBackground" type="Panel" parent="ColorSelector"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mhv8r")
+
+[node name="ColorSelectorPanel" type="Control" parent="ColorSelector"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -336.0
+offset_top = -170.0
+offset_right = 336.0
+offset_bottom = 170.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelBackground" type="Panel" parent="ColorSelector/ColorSelectorPanel"]
+material = SubResource("ShaderMaterial_r6cy3")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_f55kq")
+
+[node name="Buttons" type="HBoxContainer" parent="ColorSelector/ColorSelectorPanel"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 20.0
+offset_top = -7.0
+offset_right = -20.0
+offset_bottom = 147.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="ButtonBlue" type="Panel" parent="ColorSelector/ColorSelectorPanel/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_dpb6v")
+
+[node name="ButtonGreen" type="Panel" parent="ColorSelector/ColorSelectorPanel/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_ro04n")
+
+[node name="ButtonRed" type="Panel" parent="ColorSelector/ColorSelectorPanel/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_5ccft")
+
+[node name="ButtonYellow" type="Panel" parent="ColorSelector/ColorSelectorPanel/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_chmkd")
+
+[node name="ChooseColorText" type="RichTextLabel" parent="ColorSelector/ColorSelectorPanel"]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -215.0
+offset_top = 10.0
+offset_right = 215.0
+offset_bottom = -192.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+text = "[center][font s=50]Choose a New [wave][rainbow freq=0.2 sat=0.4 val=0.9]Color[/rainbow][/wave] to Play"
+fit_content = true
+scroll_active = false
+shortcut_keys_enabled = false
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+
+[node name="GameOverScreen" type="Control" parent="."]
+visible = false
+top_level = true
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1200.0
+offset_bottom = 800.0
+script = ExtResource("12_02t3e")
+
+[node name="GameOverScreenBackground" type="Panel" parent="GameOverScreen"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_spled")
+
+[node name="PlayerWins" type="HBoxContainer" parent="GameOverScreen"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -336.0
+offset_top = -90.0
+offset_right = 336.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Player" type="Label" parent="GameOverScreen/PlayerWins"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 100
+theme_override_styles/normal = SubResource("StyleBoxFlat_y2hvo")
+
+[node name="Wins" type="Label" parent="GameOverScreen/PlayerWins"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 100
+text = "Wins"
+
+[node name="Buttons" type="HBoxContainer" parent="GameOverScreen"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -188.0
+offset_top = 80.0
+offset_right = 188.0
+offset_bottom = 142.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+alignment = 1
+
+[node name="Restart" type="Button" parent="GameOverScreen/Buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("StyleBoxFlat_1tqon")
+theme_override_styles/hover = SubResource("StyleBoxFlat_2hgvg")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_jcfdo")
+text = "Restart"
+
+[node name="Main Menu" type="Button" parent="GameOverScreen/Buttons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("StyleBoxFlat_1tqon")
+theme_override_styles/hover = SubResource("StyleBoxFlat_w8bo4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_kibcw")
+text = "Main Menu"
+
+[connection signal="gui_input" from="GameHud/TakeCardButton" to="GameHud" method="_on_take_card_button_gui_input"]
+[connection signal="visibility_changed" from="ColorSelector" to="ColorSelector" method="_on_visibility_changed"]
+[connection signal="gui_input" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonBlue" to="ColorSelector" method="_on_button_blue_gui_input"]
+[connection signal="mouse_entered" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonBlue" to="ColorSelector" method="_on_button_blue_mouse_entered"]
+[connection signal="mouse_exited" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonBlue" to="ColorSelector" method="_on_button_blue_mouse_exited"]
+[connection signal="gui_input" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonGreen" to="ColorSelector" method="_on_button_green_gui_input"]
+[connection signal="mouse_entered" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonGreen" to="ColorSelector" method="_on_button_green_mouse_entered"]
+[connection signal="mouse_exited" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonGreen" to="ColorSelector" method="_on_button_green_mouse_exited"]
+[connection signal="gui_input" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonRed" to="ColorSelector" method="_on_button_red_gui_input"]
+[connection signal="mouse_entered" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonRed" to="ColorSelector" method="_on_button_red_mouse_entered"]
+[connection signal="mouse_exited" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonRed" to="ColorSelector" method="_on_button_red_mouse_exited"]
+[connection signal="gui_input" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonYellow" to="ColorSelector" method="_on_button_yellow_gui_input"]
+[connection signal="mouse_entered" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonYellow" to="ColorSelector" method="_on_button_yellow_mouse_entered"]
+[connection signal="mouse_exited" from="ColorSelector/ColorSelectorPanel/Buttons/ButtonYellow" to="ColorSelector" method="_on_button_yellow_mouse_exited"]
+[connection signal="restart_pressed" from="GameOverScreen" to="." method="_on_game_over_screen_restart_pressed"]
+[connection signal="visibility_changed" from="GameOverScreen" to="GameOverScreen" method="_on_visibility_changed"]
+[connection signal="gui_input" from="GameOverScreen/Buttons/Restart" to="GameOverScreen" method="_on_restart_gui_input"]

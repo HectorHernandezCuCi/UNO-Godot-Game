@@ -1,0 +1,53 @@
+[gd_scene load_steps=2 format=3 uid="uid://bunkc8qgqq3co"]
+
+[ext_resource type="PackedScene" uid="uid://c6uplsipocw2w" path="res://Scenes/Cards/Card.tscn" id="1_xq0ao"]
+
+[node name="Deck" type="Node2D"]
+position = Vector2(560, 233)
+
+[node name="Card" parent="." instance=ExtResource("1_xq0ao")]
+metadata/CardBack = true
+metadata/HoverEffect = false
+metadata/CanBePlayed = false
+
+[node name="Card2" parent="." instance=ExtResource("1_xq0ao")]
+position = Vector2(0, -3)
+metadata/CardBack = true
+metadata/HoverEffect = false
+metadata/CanBePlayed = false
+
+[node name="Card3" parent="." instance=ExtResource("1_xq0ao")]
+position = Vector2(0, -6)
+metadata/CardBack = true
+metadata/HoverEffect = false
+metadata/CanBePlayed = false
+
+[node name="Card4" parent="." instance=ExtResource("1_xq0ao")]
+position = Vector2(0, -9)
+metadata/CardBack = true
+metadata/HoverEffect = false
+metadata/CanBePlayed = false
+
+[node name="Card5" parent="." instance=ExtResource("1_xq0ao")]
+position = Vector2(0, -12)
+metadata/CardBack = true
+metadata/HoverEffect = false
+metadata/CanBePlayed = false
+
+[node name="Card6" parent="." instance=ExtResource("1_xq0ao")]
+position = Vector2(0, -15)
+metadata/CardBack = true
+metadata/HoverEffect = false
+metadata/CanBePlayed = false
+
+[node name="Card7" parent="." instance=ExtResource("1_xq0ao")]
+position = Vector2(0, -18)
+metadata/CardBack = true
+metadata/HoverEffect = false
+metadata/CanBePlayed = false
+
+[node name="Card8" parent="." instance=ExtResource("1_xq0ao")]
+position = Vector2(0, -21)
+metadata/CardBack = true
+metadata/HoverEffect = false
+metadata/CanBePlayed = false

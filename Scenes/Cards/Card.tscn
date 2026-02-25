@@ -1,0 +1,140 @@
+[gd_scene load_steps=15 format=3 uid="uid://c6uplsipocw2w"]
+
+[ext_resource type="Script" path="res://Scripts/Cards/CardLogic.gd" id="1_2pogy"]
+[ext_resource type="Script" path="res://Scripts/Cards/CardFace.gd" id="2_1x5ym"]
+[ext_resource type="Material" uid="uid://bowp4mq0m8ywt" path="res://Assets/Shaders/2D-Perspective.tres" id="2_phsky"]
+[ext_resource type="Texture2D" uid="uid://cdmi0eppmov04" path="res://Assets/Cards/cardback.png" id="3_djus4"]
+[ext_resource type="AudioStream" uid="uid://ip5p3i4hwh3t" path="res://Assets/Audio/Sfx/Game/CardFlick/CardFlickSfx-01.wav" id="5_4texw"]
+[ext_resource type="AudioStream" uid="uid://1jbfda5kjipp" path="res://Assets/Audio/Sfx/Game/Card Sfx/Card Play.wav" id="5_6l4q3"]
+[ext_resource type="AudioStream" uid="uid://b8tsmn40p5nsa" path="res://Assets/Audio/Sfx/Game/CardFlick/CardFlickSfx-02.wav" id="6_annh5"]
+[ext_resource type="AudioStream" uid="uid://b0f20vim7mxm7" path="res://Assets/Audio/Sfx/Game/CardFlick/CardFlickSfx-03.wav" id="7_7lq35"]
+[ext_resource type="AudioStream" uid="uid://djys5o81lxaw5" path="res://Assets/Audio/Sfx/Game/CardFlick/CardFlickSfx-04.wav" id="8_togcy"]
+
+[sub_resource type="Animation" id="Animation_wqdoy"]
+resource_name = "ScaleDown"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_d30yj"]
+resource_name = "ScaleUp"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_8id3i"]
+_data = {
+"ScaleDown": SubResource("Animation_wqdoy"),
+"ScaleUp": SubResource("Animation_d30yj")
+}
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_o2gkp"]
+playback_mode = 1
+random_pitch = 1.5
+streams_count = 4
+stream_0/stream = ExtResource("5_4texw")
+stream_0/weight = 1.0
+stream_1/stream = ExtResource("6_annh5")
+stream_1/weight = 1.0
+stream_2/stream = ExtResource("7_7lq35")
+stream_2/weight = 1.0
+stream_3/stream = ExtResource("8_togcy")
+stream_3/weight = 1.0
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_pbjab"]
+playback_mode = 1
+random_pitch = 1.5
+streams_count = 1
+stream_0/stream = ExtResource("5_6l4q3")
+stream_0/weight = 1.0
+
+[node name="Card" type="Node2D" groups=["Cards"]]
+scale = Vector2(0.25, 0.25)
+script = ExtResource("1_2pogy")
+angle_x_max = 0.1
+angle_y_max = 0.1
+metadata/Color = "Blue"
+metadata/Value = "1"
+metadata/CardBack = false
+metadata/HoverEffect = true
+metadata/CanBePlayed = true
+
+[node name="CardFace" type="TextureRect" parent="."]
+material = ExtResource("2_phsky")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+script = ExtResource("2_1x5ym")
+
+[node name="CardBack" type="TextureRect" parent="."]
+material = ExtResource("2_phsky")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -195.0
+offset_top = -273.0
+offset_right = 195.0
+offset_bottom = 273.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_djus4")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -191.0
+offset_top = -270.0
+offset_right = 194.0
+offset_bottom = 270.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_8id3i")
+}
+
+[node name="CardFlickSfx" type="AudioStreamPlayer" parent="."]
+stream = SubResource("AudioStreamRandomizer_o2gkp")
+bus = &"Fx"
+
+[node name="CardPlaySfx" type="AudioStreamPlayer" parent="."]
+stream = SubResource("AudioStreamRandomizer_pbjab")
+volume_db = -4.685
+bus = &"Fx"
+
+[connection signal="mouse_entered" from="Control" to="." method="_on_control_mouse_entered"]
+[connection signal="mouse_exited" from="Control" to="." method="_on_control_mouse_exited"]
