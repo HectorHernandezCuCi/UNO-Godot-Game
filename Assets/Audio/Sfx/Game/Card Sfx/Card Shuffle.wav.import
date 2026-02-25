@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://dvdddi6crt6y2"
+path="res://.godot/imported/Card Shuffle.wav-455acebf2e9ba899055f3b8e5f8a049b.sample"
+
+[deps]
+
+source_file="res://Assets/Audio/Sfx/Game/Card Sfx/Card Shuffle.wav"
+dest_files=["res://.godot/imported/Card Shuffle.wav-455acebf2e9ba899055f3b8e5f8a049b.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=0

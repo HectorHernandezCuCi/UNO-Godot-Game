@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://bowp4mq0m8ywt"]
+
+[ext_resource type="Shader" path="res://Assets/Shaders/2D-Perspective.gdshader" id="1_wc4dv"]
+
+[resource]
+resource_local_to_scene = true
+shader = ExtResource("1_wc4dv")
+shader_parameter/fov = 90.0
+shader_parameter/cull_back = true
+shader_parameter/y_rot = 0.0
+shader_parameter/x_rot = 0.0
+shader_parameter/inset = 0.0
+shader_parameter/grayscale = false

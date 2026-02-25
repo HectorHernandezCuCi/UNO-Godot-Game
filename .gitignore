@@ -1,3 +1,65 @@
-# Godot 4+ specific ignores
+# =========================
+# Godot Engine .gitignore
+# =========================
+
+# Godot import files (auto-generated)
+.import/
+.export/
+.export.cfg
+export_presets.cfg
+
+# Godot 4 specific
 .godot/
-/android/
+
+# Mono / C# builds
+.mono/
+data_*/
+*.csproj
+*.sln
+*.user
+*.mono/
+bin/
+obj/
+
+# Visual Studio / Rider
+.vscode/
+.idea/
+*.DotSettings.user
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary / cache files
+*.tmp
+*.temp
+
+# Backup files
+*~
+*.bak
+
+# Godot-specific cache
+*.translation
+
+# Exported game builds
+# (uncomment if you export into project folder)
+# *.exe
+# *.apk
+# *.aab
+# *.ipa
+# *.x86_64
+# *.zip
+
+# Crash dumps
+*.dmp
+
+# Editor settings (optional — comment out if you want shared settings)
+# editor_settings-*.tres
+# *.editorconfig
+
+# Environment / local config
+.env

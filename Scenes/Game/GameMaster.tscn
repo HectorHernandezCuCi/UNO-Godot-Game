@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://br7kedq4y43db"]
+
+[ext_resource type="Script" path="res://Scripts/GameMaster.gd" id="1_n3pns"]
+[ext_resource type="AudioStream" uid="uid://6f5ral8ho0lj" path="res://Assets/Audio/Sfx/Game/Card Sfx/Card Draw.wav" id="2_w7n1d"]
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_gqkah"]
+random_pitch = 1.3
+streams_count = 1
+stream_0/stream = ExtResource("2_w7n1d")
+stream_0/weight = 1.0
+
+[node name="GameMaster" type="Node2D"]
+script = ExtResource("1_n3pns")
+
+[node name="CardDrawSfx" type="AudioStreamPlayer" parent="."]
+stream = SubResource("AudioStreamRandomizer_gqkah")
+bus = &"Fx"

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dfmcwfn30h21m"
+path="res://.godot/imported/The Halcyon Card Club.mp3-ce06470a0f635569eba23caab9378dcd.mp3str"
+
+[deps]
+
+source_file="res://Assets/Audio/Music/The Halcyon Card Club.mp3"
+dest_files=["res://.godot/imported/The Halcyon Card Club.mp3-ce06470a0f635569eba23caab9378dcd.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
