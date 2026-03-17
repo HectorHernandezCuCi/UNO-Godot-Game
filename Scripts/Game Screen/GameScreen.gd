@@ -9,6 +9,7 @@ extends Node2D
 @onready var color_selector = $ColorSelector
 @onready var card_shuffle_sfx = $CardShuffleSfx
 @onready var game_over_screen = $GameOverScreen
+@onready var pause_menu = $PauseLayer/PauseMenu
 
 var game_ended: bool = false
 
@@ -19,7 +20,22 @@ func _ready() -> void:
 	GameMaster.connect("cpu2_hand_changed", _on_GameMaster_cpu2_hand_changed)
 	GameMaster.connect("cpu3_hand_changed", _on_GameMaster_cpu3_hand_changed)
 	GameMaster.connect("new_round", _on_GameMaster_new_round)
+	pause_menu.connect("resumed", _on_pause_menu_resumed)
+	pause_menu.hide()
 	init_game()
+	
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_toggle_pause()
+
+func _toggle_pause() -> void:
+	var is_paused = not get_tree().paused
+	SceneManager.pause_game(is_paused)
+	if is_paused:
+		pause_menu.show()
+	else:
+		pause_menu.hide()
+
 
 func init_game() -> void:
 	game_ended = false
@@ -39,6 +55,7 @@ func init_game() -> void:
 	GameMaster.draw_to_cpu_hand(7, 3)
 	color_selector.hide()
 	game_over_screen.hide()
+	pause_menu.hide()
 	
 	GameMaster.draw_to_discard(1)
 	if GameMaster.get_top_discard_card().get_meta("Color") == "Wild":
@@ -129,3 +146,6 @@ func _on_someone_won(winning_player: String) -> void:
 
 func _on_game_over_screen_restart_pressed() -> void:
 	init_game()
+	
+func _on_pause_menu_resumed() -> void:
+	pause_menu.hide()

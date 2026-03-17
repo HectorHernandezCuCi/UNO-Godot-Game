@@ -1,7 +1,7 @@
-[gd_scene load_steps=15 format=3 uid="uid://c6uplsipocw2w"]
+[gd_scene format=3 uid="uid://c6uplsipocw2w"]
 
-[ext_resource type="Script" path="res://Scripts/Cards/CardLogic.gd" id="1_2pogy"]
-[ext_resource type="Script" path="res://Scripts/Cards/CardFace.gd" id="2_1x5ym"]
+[ext_resource type="Script" uid="uid://bphcwyvr1sfnm" path="res://Scripts/Cards/CardLogic.gd" id="1_2pogy"]
+[ext_resource type="Script" uid="uid://bdkyr6tvl7jbi" path="res://Scripts/Cards/CardFace.gd" id="2_1x5ym"]
 [ext_resource type="Material" uid="uid://bowp4mq0m8ywt" path="res://Assets/Shaders/2D-Perspective.tres" id="2_phsky"]
 [ext_resource type="Texture2D" uid="uid://cdmi0eppmov04" path="res://Assets/Cards/cardback.png" id="3_djus4"]
 [ext_resource type="AudioStream" uid="uid://ip5p3i4hwh3t" path="res://Assets/Audio/Sfx/Game/CardFlick/CardFlickSfx-01.wav" id="5_4texw"]
@@ -44,8 +44,8 @@ tracks/0/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_8id3i"]
 _data = {
-"ScaleDown": SubResource("Animation_wqdoy"),
-"ScaleUp": SubResource("Animation_d30yj")
+&"ScaleDown": SubResource("Animation_wqdoy"),
+&"ScaleUp": SubResource("Animation_d30yj")
 }
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_o2gkp"]
@@ -53,22 +53,17 @@ playback_mode = 1
 random_pitch = 1.5
 streams_count = 4
 stream_0/stream = ExtResource("5_4texw")
-stream_0/weight = 1.0
 stream_1/stream = ExtResource("6_annh5")
-stream_1/weight = 1.0
 stream_2/stream = ExtResource("7_7lq35")
-stream_2/weight = 1.0
 stream_3/stream = ExtResource("8_togcy")
-stream_3/weight = 1.0
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_pbjab"]
 playback_mode = 1
 random_pitch = 1.5
 streams_count = 1
 stream_0/stream = ExtResource("5_6l4q3")
-stream_0/weight = 1.0
 
-[node name="Card" type="Node2D" groups=["Cards"]]
+[node name="Card" type="Node2D" unique_id=1972619095 groups=["Cards"]]
 scale = Vector2(0.25, 0.25)
 script = ExtResource("1_2pogy")
 angle_x_max = 0.1
@@ -79,7 +74,7 @@ metadata/CardBack = false
 metadata/HoverEffect = true
 metadata/CanBePlayed = true
 
-[node name="CardFace" type="TextureRect" parent="."]
+[node name="CardFace" type="TextureRect" parent="." unique_id=2091838164]
 material = ExtResource("2_phsky")
 anchors_preset = 8
 anchor_left = 0.5
@@ -91,7 +86,7 @@ grow_vertical = 2
 size_flags_horizontal = 4
 script = ExtResource("2_1x5ym")
 
-[node name="CardBack" type="TextureRect" parent="."]
+[node name="CardBack" type="TextureRect" parent="." unique_id=1842890471]
 material = ExtResource("2_phsky")
 anchors_preset = 8
 anchor_left = 0.5
@@ -106,7 +101,7 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("3_djus4")
 
-[node name="Control" type="Control" parent="."]
+[node name="Control" type="Control" parent="." unique_id=1702682210]
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5
@@ -122,16 +117,14 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-"": SubResource("AnimationLibrary_8id3i")
-}
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=269944128]
+libraries/ = SubResource("AnimationLibrary_8id3i")
 
-[node name="CardFlickSfx" type="AudioStreamPlayer" parent="."]
+[node name="CardFlickSfx" type="AudioStreamPlayer" parent="." unique_id=1484603722]
 stream = SubResource("AudioStreamRandomizer_o2gkp")
 bus = &"Fx"
 
-[node name="CardPlaySfx" type="AudioStreamPlayer" parent="."]
+[node name="CardPlaySfx" type="AudioStreamPlayer" parent="." unique_id=1614377877]
 stream = SubResource("AudioStreamRandomizer_pbjab")
 volume_db = -4.685
 bus = &"Fx"
