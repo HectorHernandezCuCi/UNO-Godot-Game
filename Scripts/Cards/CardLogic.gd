@@ -39,7 +39,10 @@ func _input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if hovering and event.pressed:
 				if can_be_played():
-					play_card(0)
+					if GameMaster.is_multiplayer:
+						_play_card_multiplayer()
+					else:
+						play_card(0)
 	if hovering and get_meta("HoverEffect"): #idk what math is used here but it works and gives the card the 3d perspective we all love
 		var mouse_pos = get_local_mouse_position()
 
@@ -107,6 +110,11 @@ func play_card(played_from: int, selected_card: Node2D = self) -> void: #remove 
 			emit_signal("card_played", played_card.get_meta("Color"), played_card.get_meta("Value"))
 
 func can_be_played(card: Node2D = self, cpu_hand: bool = false, picker: bool = false) -> bool: #check if the card can be played according to UNO rules
+	# [MULTI] Bloquear si no es el turno del jugador local
+	if GameMaster.is_multiplayer and not cpu_hand:
+		if not GameMaster._is_my_turn():
+			return false
+	
 	var played_card_color = card.get_meta("Color")
 	var played_card_value = card.get_meta("Value")
 	if cpu_hand:
@@ -158,3 +166,14 @@ func set_card_back(card_back: bool) -> void:
 		set_meta("CardBack" , false)
 		get_node("CardFace").visible = true
 		get_node("CardBack").visible = false
+
+#Solicita jugar al host por red
+func _play_card_multiplayer() -> void:
+	var color = get_meta("Color")
+	var value = get_meta("Value")
+
+	# Si es Wild o PickFour, el jugador debe elegir color primero
+	if color == "Wild":
+		emit_signal("color_pick_needed", color, value)
+	else:
+		GameMaster.mp_request_play(color, value)
