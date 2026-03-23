@@ -1,0 +1,139 @@
+[gd_scene format=3 uid="uid://cr06x2kuh3mf8"]
+
+[ext_resource type="Script" uid="uid://biiiufmjcjqd0" path="res://Scenes/Menus/MultiplayerMenu/MultiplayerMenu.gd" id="1_s07j7"]
+[ext_resource type="Texture2D" uid="uid://cww5rvk6dyh4x" path="res://Assets/Background/background_balatro_style.png" id="1_x0xqg"]
+
+[node name="MultiplayerMenu" type="Control" unique_id=1532709747]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_s07j7")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1143718997]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_x0xqg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=2112815425]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=869998733]
+custom_minimum_size = Vector2(700, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+alignment = 1
+
+[node name="Title" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1889797717]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "UNO GAME"
+
+[node name="Subtitle" type="Label" parent="MarginContainer/VBoxContainer" unique_id=617524530]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Multijugador"
+
+[node name="NamePanel" type="PanelContainer" parent="MarginContainer/VBoxContainer" unique_id=2085688444]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/NamePanel" unique_id=1615834344]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="MarginContainer/VBoxContainer/NamePanel/VBoxContainer" unique_id=1158584601]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Tu Nombre"
+
+[node name="NameInput" type="LineEdit" parent="MarginContainer/VBoxContainer/NamePanel/VBoxContainer" unique_id=298748847]
+layout_mode = 2
+
+[node name="CardsContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1949550972]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+alignment = 1
+
+[node name="CreateCard" type="PanelContainer" parent="MarginContainer/VBoxContainer/CardsContainer" unique_id=1291823883]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/CardsContainer/CreateCard" unique_id=3339439]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="MarginContainer/VBoxContainer/CardsContainer/CreateCard/VBoxContainer" unique_id=1767003313]
+layout_mode = 2
+
+[node name="CardTitle" type="Label" parent="MarginContainer/VBoxContainer/CardsContainer/CreateCard/VBoxContainer" unique_id=2119345503]
+layout_mode = 2
+text = "Crear Sala"
+horizontal_alignment = 1
+
+[node name="CardDesc" type="Label" parent="MarginContainer/VBoxContainer/CardsContainer/CreateCard/VBoxContainer" unique_id=534954927]
+layout_mode = 2
+
+[node name="CreateButton" type="Button" parent="MarginContainer/VBoxContainer/CardsContainer/CreateCard/VBoxContainer" unique_id=321451295]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Crea Sala"
+
+[node name="JoinCard" type="PanelContainer" parent="MarginContainer/VBoxContainer/CardsContainer" unique_id=1916561202]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/CardsContainer/JoinCard" unique_id=1339052522]
+layout_mode = 2
+
+[node name="Icon" type="Label" parent="MarginContainer/VBoxContainer/CardsContainer/JoinCard/VBoxContainer" unique_id=3139214]
+layout_mode = 2
+
+[node name="CardTitle" type="Label" parent="MarginContainer/VBoxContainer/CardsContainer/JoinCard/VBoxContainer" unique_id=1408250947]
+layout_mode = 2
+text = "Unirse"
+horizontal_alignment = 1
+
+[node name="CardDesc" type="Label" parent="MarginContainer/VBoxContainer/CardsContainer/JoinCard/VBoxContainer" unique_id=1224393852]
+layout_mode = 2
+
+[node name="IpInput" type="LineEdit" parent="MarginContainer/VBoxContainer/CardsContainer/JoinCard/VBoxContainer" unique_id=605333254]
+layout_mode = 2
+
+[node name="JoinButton" type="Button" parent="MarginContainer/VBoxContainer/CardsContainer/JoinCard/VBoxContainer" unique_id=1237380859]
+layout_mode = 2
+text = "Entrar"
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=242356093]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=899963734]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "<- VOLVER"
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/CardsContainer/CreateCard/VBoxContainer/CreateButton" to="." method="_on_create_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/CardsContainer/JoinCard/VBoxContainer/JoinButton" to="." method="_on_join_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/BackButton" to="." method="_on_back_pressed"]

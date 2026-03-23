@@ -10,3 +10,7 @@ func _on_start_game_pressed() -> void:
 
 func _on_exit_pressed() -> void:
 	get_tree().quit()
+
+
+func _on_multiplayer_pressed() -> void:
+	SceneManager.go_to_multiplayer_menu()

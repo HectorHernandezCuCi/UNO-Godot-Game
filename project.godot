@@ -28,6 +28,9 @@ buses/default_bus_layout="uid://cuhtl6v8jof4n"
 GameMaster="*res://Scenes/Game/GameMaster.tscn"
 MusicManager="*res://Scenes/Game/MusicManager.tscn"
 SceneManager="*uid://dp3sfatrujiei"
+Nakama="*uid://buh2s1a10ew5s"
+NetworkManager="*uid://t1acmf4i880x"
+GameState="*uid://dudo62g6g12fu"
 
 [display]
 

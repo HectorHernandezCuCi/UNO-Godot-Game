@@ -8,6 +8,10 @@ signal cpu2_hand_changed #ditto
 signal cpu3_hand_changed
 signal new_round()
 
+signal game_started_multiplayer
+signal multiplayer_state_updated
+signal game_over(winner_peer_id: int)
+
 @onready var card_draw_sfx = $CardDrawSfx
 
 var players = ["player", "cpu1", "cpu2", "cpu3"]
@@ -25,6 +29,10 @@ var player_hand = [] #cards in the player's hand
 var cpu1_hand = [] #cards in cpu1's hand
 var cpu2_hand = [] #ditto
 var cpu3_hand = []
+
+var is_multiplayer: bool = false
+var peer_to_hand_index: Dictionary = {}
+var my_hand_data: Array = []
 
 const color_map = {
 	"Blue": Color(0, 0.764, 0.898),
@@ -99,6 +107,242 @@ const sprite_map: Dictionary = {
 		"PickFour": preload("res://Assets/Cards/Wild/wild_pickfour.png"),
 	},
 }
+
+func start_multiplayer_game() -> void:
+	if not NetworkManager.is_host():
+		return
+	is_multiplayer = true
+	
+	#Mapear peer_ids a indices de mano
+	var ordered = NetworkManager.get_ordered_ids()
+	for i in ordered.size():
+		peer_to_hand_index[ordered[i]] = i
+	
+	#Inicializar mazo y repartir usando la logica existente
+	init_deck()
+	
+	for i in ordered.size():
+		var drawn = await draw_from_deck(7)
+		_set_hand_by_index(i, drawn)
+	
+	#Primera carta del descarte (no Wild)
+	draw_to_discard(1)
+	while get_top_discard_card().get_meta("Color") == "wild":
+		draw_to_discard(1)
+	current_player = 0
+	clockwise = true
+	cards_to_be_taken = 0
+	
+	#Sincronizar a todos
+	_sync_all_hands()
+	_sync_public_state()
+	
+	#Notificar inicio
+	_rpc_game_started.rpc()
+	
+# ========== Acciones del Jugador Local ============
+#El jugador local quiere jugar una carta
+func mp_request_play(card_color: String, card_value: String, chosen_color: String="") -> void:
+	if not _is_my_turn():
+		return
+	if NetworkManager.is_host():
+		_server_play_card(NetworkManager.get_my_id(), card_color, card_value, chosen_color)
+	else:
+		_rpc_request_play.rpc_id(1, card_color, card_value, chosen_color)
+
+#El Jugador local roba una carta
+func mp_request_draw() -> void:
+	if not _is_my_turn():
+		return
+	if NetworkManager.is_host():
+		_server_draw_card(NetworkManager.get_my_id(), 1, true)
+	else:
+		_rpc_request_draw.rpc_id(1)
+
+# ============= RPCs Cliente -> Host ============
+@rpc("any_peer", "reliable")
+func _rpc_request_play(color: String, value: String, chosen_color: String) -> void:
+	if not NetworkManager.is_host():
+		return
+	var sender = multiplayer.get_remote_sender_id()
+	_server_play_card(sender, color, value, chosen_color)
+
+@rpc("any_peer", "reliable")
+func _rpc_request_draw() -> void:
+	if not NetworkManager.is_host():
+		return
+	var sender = multiplayer.get_remote_sender_id()
+	_server_draw_card(sender, 1, true)
+	
+#============ Logia del HOST (arbitro) =================
+func _server_play_card(peer_id: int, color: String, value: String,
+		chosen_color: String) -> void:
+	var hand_idx = peer_to_hand_index.get(peer_id, -1)
+	if hand_idx == -1:
+		return
+
+	# Validar turno
+	var ordered = NetworkManager.get_ordered_ids()
+	if ordered[current_player] != peer_id:
+		push_warning("Jugada rechazada: no es el turno de %d" % peer_id)
+		return
+
+	# Buscar la carta en la mano
+	var hand = _get_hand_by_index(hand_idx)
+	var target_card: Node = null
+	for card in hand:
+		if card.get_meta("Color") == color and card.get_meta("Value") == value:
+			target_card = card
+			break
+
+	if not target_card:
+		push_warning("Carta no encontrada en mano de %d" % peer_id)
+		return
+
+	# Validar jugada usando tu lógica existente
+	if not target_card.can_be_played(target_card, true):
+		push_warning("Carta inválida de %d" % peer_id)
+		return
+
+	# Aplicar color elegido (para Wild)
+	if not chosen_color.is_empty():
+		current_color = chosen_color
+
+	# Jugar la carta usando tu función existente
+	play_to_discard(hand_idx, target_card)
+	
+	var top = get_top_discard_card()
+
+	# Verificar victoria
+	if _get_hand_by_index(hand_idx).is_empty():
+		_rpc_game_over.rpc(peer_id)
+		return
+
+	# Aplicar efecto de la carta (skip, reverse, etc.)
+	# Tu lógica de efectos ya existe en Card.gd — aquí solo avanzamos turno
+	# Si tu Card.gd llama next_turn() internamente, esto ya está cubierto
+	# Si no, puedes llamarlo aquí según el valor:
+	_apply_card_effect_server(value, hand_idx)
+	_sync_all_hands()
+	_sync_public_state()
+
+func _server_draw_card(peer_id: int, count: int, advance: bool) -> void:
+	var hand_idx = peer_to_hand_index.get(peer_id, -1)
+	if hand_idx == -1:
+		return
+
+	var drawn = await draw_from_deck(count)
+	var hand = _get_hand_by_index(hand_idx)
+	hand.append_array(drawn)
+
+	if advance:
+		next_turn()
+
+	_sync_all_hands()
+	_sync_public_state()
+
+func _apply_card_effect_server(value: String, played_by_idx: int) -> void:
+	match value:
+		"Skip":
+			next_turn(true, false)
+		"Reverse":
+			next_turn(false, true)
+		"Picker":   # +2
+			next_turn()
+			var next_idx = peer_to_hand_index.get(
+				NetworkManager.get_ordered_ids()[current_player], -1
+			)
+			if next_idx != -1:
+				var drawn = await draw_from_deck(2)
+				_get_hand_by_index(next_idx).append_array(drawn)
+			next_turn()
+		"PickFour": # +4
+			next_turn()
+			var next_idx = peer_to_hand_index.get(
+				NetworkManager.get_ordered_ids()[current_player], -1
+			)
+			if next_idx != -1:
+				var drawn = await draw_from_deck(4)
+				_get_hand_by_index(next_idx).append_array(drawn)
+			next_turn()
+		_:
+			next_turn()
+
+# ══ SINCRONIZACIÓN HOST → CLIENTES ════════════════════════════════════════════
+
+func _sync_all_hands() -> void:
+	var ordered = NetworkManager.get_ordered_ids()
+	for i in ordered.size():
+		var pid = ordered[i]
+		var hand_arr = GameState.hand_to_array(_get_hand_by_index(i))
+		if pid == 1:  # host se actualiza localmente
+			_rpc_receive_hand.rpc_id(1, hand_arr)
+		else:
+			_rpc_receive_hand.rpc_id(pid, hand_arr)
+
+func _sync_public_state() -> void:
+	var state = GameState.build_public_state(self)
+	_rpc_receive_state.rpc(state)
+
+# ══ RPCs HOST → CLIENTES ═════════════════════════════════════════════════════
+
+@rpc("authority", "reliable")
+func _rpc_game_started() -> void:
+	is_multiplayer = true
+	emit_signal("game_started_multiplayer")
+
+@rpc("authority", "reliable")
+func _rpc_receive_hand(hand_data: Array) -> void:
+	# Reconstruir nodos carta desde los dicts
+	my_hand_data = hand_data
+	player_hand.clear()
+	for d in hand_data:
+		player_hand.append(GameState.dict_to_card(d))
+	emit_signal("player_hand_changed")
+
+@rpc("authority", "reliable")
+func _rpc_receive_state(state: Dictionary) -> void:
+	current_player    = state["current_player"]
+	current_color     = state["current_color"]
+	clockwise         = state["clockwise"]
+	cards_to_be_taken = state["cards_to_be_taken"]
+
+	# Reconstruir la carta del descarte
+	var top = GameState.dict_to_card(state["discard_top"])
+	discard_pile = [top]
+
+	emit_signal("discard_pile_changed")
+	emit_signal("new_round")
+	emit_signal("multiplayer_state_updated")
+
+@rpc("authority", "reliable", "call_local")
+func _rpc_game_over(winner_peer_id: int) -> void:
+	emit_signal("game_over", winner_peer_id)
+
+# ══ HELPERS ══════════════════════════════════════════════════════════════════
+
+func _is_my_turn() -> bool:
+	if not is_multiplayer:
+		return true
+	var ordered = NetworkManager.get_ordered_ids()
+	if ordered.is_empty():
+		return false
+	return ordered[current_player] == NetworkManager.get_my_id()
+
+func _get_hand_by_index(idx: int) -> Array:
+	match idx:
+		0: return player_hand
+		1: return cpu1_hand
+		2: return cpu2_hand
+		3: return cpu3_hand
+	return []
+
+func _set_hand_by_index(idx: int, hand: Array) -> void:
+	match idx:
+		0: player_hand = hand
+		1: cpu1_hand   = hand
+		2: cpu2_hand   = hand
+		3: cpu3_hand   = hand
 
 func next_turn(skip: bool = false, reverse: bool = false) -> void:
 	if reverse:
@@ -343,3 +587,29 @@ func compare_cards(card1, card2): #the sorting algorithm which first sorts cards
 		return color_order[card1_color] < color_order[card2_color]
 	else:
 		return card1.get_meta("Value") < card2.get_meta("Value")
+
+# Devuelve el peer_id del jugador cuyo turno es ahora
+func _get_current_peer_id() -> int:
+	var ordered = NetworkManager.get_ordered_ids()
+	if ordered.is_empty() or current_player >= ordered.size():
+		return -1
+	return ordered[current_player]
+
+# Versión multijugador del "robar por penalización" (Picker/PickFour acumulados)
+func mp_request_draw_penalty() -> void:
+	if not _is_my_turn():
+		return
+	var count = cards_to_be_taken
+	cards_to_be_taken = 0
+	if NetworkManager.is_host():
+		_server_draw_card(NetworkManager.get_my_id(), count, true)
+	else:
+		_rpc_request_draw_penalty.rpc_id(1, count)
+
+@rpc("any_peer", "reliable")
+func _rpc_request_draw_penalty(count: int) -> void:
+	if not NetworkManager.is_host():
+		return
+	var sender = multiplayer.get_remote_sender_id()
+	cards_to_be_taken = 0
+	_server_draw_card(sender, count, true)

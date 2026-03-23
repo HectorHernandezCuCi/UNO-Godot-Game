@@ -10,6 +10,15 @@ signal color_selected
 
 var default_panel_color = Color(1, 1, 1)
 
+# [MULTI] Guardamos temporalmente la carta Wild pendiente de color
+var _pending_card_color: String = ""
+var _pending_card_value: String = ""
+
+# [MULTI] GameScreen llama esto antes de mostrar el selector en multijugador
+func set_pending_wild(card_color: String, card_value: String) -> void:
+	_pending_card_color = card_color
+	_pending_card_value = card_value
+
 #blue button mouse enter and exit
 func _on_button_blue_mouse_entered() -> void:
 	var tween = create_tween()
@@ -50,30 +59,22 @@ func _on_button_yellow_mouse_exited() -> void:
 #blue button click
 func _on_button_blue_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed():
-		GameMaster.current_color = "Blue"
-		color_selected.emit()
-		hide()
+		_select_color("Blue")
 
 #green button click
 func _on_button_green_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed():
-		GameMaster.current_color = "Green"
-		color_selected.emit()
-		hide()
+		_select_color("Green")
 
 #red button click
 func _on_button_red_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed():
-		GameMaster.current_color = "Red"
-		color_selected.emit()
-		hide()
+		_select_color("Red")
 
 #yellow button click
 func _on_button_yellow_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed():
-		GameMaster.current_color = "Yellow"
-		color_selected.emit()
-		hide()
+		_select_color("Yellow")
 
 func _on_visibility_changed() -> void:
 	var tween = create_tween().set_parallel()
@@ -87,3 +88,18 @@ func _on_visibility_changed() -> void:
 		MusicManager.set_lowpass_freq(20000, 1.0)
 		tween.tween_property(color_selector_background, "modulate", Color("ffffff00"), background_color_transition_time)
 		tween.tween_property(color_selector_panel, "modulate", Color("ffffff00"), background_color_transition_time)
+
+
+# ── Lógica central de selección ──────────────────────────────────────────────
+
+func _select_color(chosen: String) -> void:
+	GameMaster.current_color = chosen  # single player y preview local intactos
+
+	if GameMaster.is_multiplayer:
+		# Enviar la jugada Wild al host con el color elegido
+		GameMaster.mp_request_play(_pending_card_color, _pending_card_value, chosen)
+		_pending_card_color = ""
+		_pending_card_value = ""
+
+	color_selected.emit()
+	hide()

@@ -24,6 +24,15 @@ func _ready() -> void:
 	pause_menu.hide()
 	init_game()
 	
+	# [MULTI] Señales de red
+	if GameMaster.is_multiplayer:
+		GameMaster.connect("multiplayer_state_updated", _on_multiplayer_state_updated)
+		GameMaster.connect("game_over",                 _on_multiplayer_game_over)
+		# La partida ya fue inicializada por el host — solo preparar UI
+		_init_multiplayer_ui()
+	else:
+		init_game()
+	
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_toggle_pause()
@@ -80,6 +89,9 @@ func _on_GameMaster_discard_pile_changed() -> void:
 	discard_pile.update_discard_pile()
 
 func _on_GameMaster_new_round() -> void:
+	if GameMaster.is_multiplayer:
+		return
+	
 	if not game_ended:
 		match GameMaster.current_player:
 			0:
@@ -114,6 +126,9 @@ func _on_GameMaster_new_round() -> void:
 		pass
 
 func _on_card_played(card_color: String, card_value: String) -> void:
+	if GameMaster.is_multiplayer:
+		return
+	
 	match card_color:
 		"Blue", "Green", "Red", "Yellow":
 			GameMaster.current_color = card_color
@@ -145,7 +160,90 @@ func _on_someone_won(winning_player: String) -> void:
 	game_over_screen.change_winning_player(winning_player, 1.0)
 
 func _on_game_over_screen_restart_pressed() -> void:
+	# [MULTI] En multijugador, volver al lobby en vez de reiniciar
+	if GameMaster.is_multiplayer:
+		NetworkManager.disconnect_game()
+		SceneManager.go_to_menu()  # ajusta según tu SceneManager
+		return
 	init_game()
 	
 func _on_pause_menu_resumed() -> void:
 	pause_menu.hide()
+
+# ── MULTIJUGADOR ─────────────────────────────────────────────────────────────
+
+# [MULTI] Prepara la UI cuando llegamos a la escena ya con el juego iniciado
+func _init_multiplayer_ui() -> void:
+	game_ended = false
+	color_selector.hide()
+	game_over_screen.hide()
+	pause_menu.hide()
+	card_shuffle_sfx.play()
+	# El estado llega vía _on_multiplayer_state_updated cuando el host sincroniza
+
+# [MULTI] Se dispara cuando GameMaster recibe _rpc_receive_state del host
+# Reemplaza lo que antes hacía new_round para refrescar el estado visual
+func _on_multiplayer_state_updated() -> void:
+	if game_ended:
+		return
+
+	# Refrescar descarte y mano (las señales player_hand_changed y
+	# discard_pile_changed ya se emiten en _rpc_receive_state/_rpc_receive_hand)
+	game_hud.change_pointer_color(
+		GameMaster.color_map[GameMaster.current_color], 0.5
+	)
+
+	# Calcular quién juega ahora en términos de posición visual (0=yo, 1,2,3=rivales)
+	var visual_index = _peer_to_visual_index(
+		GameMaster._get_current_peer_id()
+	)
+	game_hud.change_pointer_position(_visual_index_to_pointer_pos(visual_index), 0.75)
+
+	# Si es mi turno
+	if GameMaster._is_my_turn():
+		if GameMaster.cards_to_be_taken > 0:
+			game_hud.change_take_card_button_number(GameMaster.cards_to_be_taken, 0.5)
+			player_hand.can_play(true, true)  # solo cartas Picker/PickFour
+			await game_hud.take_card_button_clicked
+			# Robar cartas por red
+			GameMaster.mp_request_draw_penalty()
+			player_hand.can_play()
+		else:
+			game_hud.change_take_card_button_number(1, 0.5)
+			game_hud.change_take_card_button_color(
+				GameMaster.color_map[GameMaster.current_color], 0.5
+			)
+			player_hand.can_play()
+	else:
+		# No es mi turno — deshabilitar mano
+		game_hud.change_take_card_button_color(Color.WHITE, 0.5)
+		player_hand.can_play(false)
+
+# [MULTI] Convierte peer_id al índice visual relativo al jugador local
+# El jugador local siempre es posición 0 en pantalla
+func _peer_to_visual_index(peer_id: int) -> int:
+	var ordered = NetworkManager.get_ordered_ids()
+	var my_index = ordered.find(NetworkManager.get_my_id())
+	var peer_index = ordered.find(peer_id)
+	if peer_index == -1 or my_index == -1:
+		return 0
+	return (peer_index - my_index + ordered.size()) % ordered.size()
+
+func _visual_index_to_pointer_pos(visual_index: int) -> float:
+	# Mapear 0,1,2,3 → posiciones del HUD (igual que en single player)
+	match visual_index:
+		0: return 0.0
+		1: return 0.25
+		2: return 0.5
+		3: return 0.75
+	return 0.0
+
+# [MULTI] Victoria en multijugador
+func _on_multiplayer_game_over(winner_peer_id: int) -> void:
+	game_ended = true
+	var winner_name = NetworkManager.players.get(
+		winner_peer_id, { "username": "Jugador" }
+	).username
+	game_over_screen.show()
+	game_over_screen.change_winning_player(winner_name, 1.0)
+	
