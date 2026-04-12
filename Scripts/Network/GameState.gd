@@ -4,7 +4,7 @@ extends Node
 static func card_to_dict(card: Node) -> Dictionary:
 	return{
 		"color": card.get_meta("Color"),
-		"value": card.get_meta("value")
+		"value": card.get_meta("Value")
 	}
 
 #Serializa un array de nodos carta

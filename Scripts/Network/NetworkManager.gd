@@ -59,7 +59,8 @@ func get_ordered_ids() -> Array:
 #============ Callbacks ===============
 func _on_peer_connected(peer_id: int) -> void:
 	#Enviarle nuestra informacion
-	_register_player.rpc_id(peer_id, local_username)
+	if is_host():
+		_register_player.rpc_id(peer_id, local_username)
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	players.erase(peer_id)
@@ -82,10 +83,19 @@ func _on_server_disconnected() -> void:
 @rpc("any_peer", "reliable")
 func _register_player(username: String) -> void:
 	var sender = multiplayer.get_remote_sender_id()
+	if sender == 0:
+		sender = 1
 	players[sender] = {"username": username}
 	emit_signal("player_registered", sender, username)
+	print("PLAYERS DICT ahora: ", players)
 	
 	#El host reenvia la lista completa al nuevo jugador
-	if is_host():
-		for pid in players:
-			_register_player.rpc_id(sender, players[pid].username)
+	if is_host() and sender != 1:
+		_sync_player_list.rpc_id(sender, players)
+
+@rpc("authority", "reliable")
+func _sync_player_list(player_dict: Dictionary) -> void:
+	for pid in player_dict:
+		if not players.has(pid):
+			players[pid] = player_dict[pid]
+			emit_signal("player_registered", pid, player_dict[pid].username)

@@ -111,6 +111,8 @@ const sprite_map: Dictionary = {
 func start_multiplayer_game() -> void:
 	if not NetworkManager.is_host():
 		return
+	print("START ordered: ", NetworkManager.get_ordered_ids())
+	print("START players: ", NetworkManager.players)
 	is_multiplayer = true
 	
 	#Mapear peer_ids a indices de mano
@@ -200,13 +202,19 @@ func _server_play_card(peer_id: int, color: String, value: String,
 		return
 
 	# Validar jugada usando tu lógica existente
-	if not target_card.can_be_played(target_card, true):
-		push_warning("Carta inválida de %d" % peer_id)
+	if not target_card.can_be_played(target_card, false):
+		push_warning("Carta inválida de %d: %s %s sobre %s %s" % [
+			peer_id, color, value, current_color,
+			get_top_discard_card().get_meta("Value")
+		])
 		return
-
-	# Aplicar color elegido (para Wild)
-	if not chosen_color.is_empty():
-		current_color = chosen_color
+	if color == "Wild":
+		if not chosen_color.is_empty():
+			current_color = chosen_color
+		else:
+			current_color = color_map.keys().pick_random()
+	else:
+		current_color = color
 
 	# Jugar la carta usando tu función existente
 	play_to_discard(hand_idx, target_card)
@@ -275,18 +283,19 @@ func _sync_all_hands() -> void:
 	for i in ordered.size():
 		var pid = ordered[i]
 		var hand_arr = GameState.hand_to_array(_get_hand_by_index(i))
-		if pid == 1:  # host se actualiza localmente
-			_rpc_receive_hand.rpc_id(1, hand_arr)
+		if pid == NetworkManager.get_my_id():  # host se actualiza localmente
+			_rpc_receive_hand(hand_arr)
 		else:
 			_rpc_receive_hand.rpc_id(pid, hand_arr)
 
 func _sync_public_state() -> void:
 	var state = GameState.build_public_state(self)
+	_rpc_receive_state(state)
 	_rpc_receive_state.rpc(state)
 
 # ══ RPCs HOST → CLIENTES ═════════════════════════════════════════════════════
 
-@rpc("authority", "reliable")
+@rpc("authority", "reliable", "call_local")
 func _rpc_game_started() -> void:
 	is_multiplayer = true
 	emit_signal("game_started_multiplayer")
@@ -302,16 +311,23 @@ func _rpc_receive_hand(hand_data: Array) -> void:
 
 @rpc("authority", "reliable")
 func _rpc_receive_state(state: Dictionary) -> void:
+	print("RECV STATE discard_top: " , state["discard_top"])
 	current_player    = state["current_player"]
 	current_color     = state["current_color"]
 	clockwise         = state["clockwise"]
 	cards_to_be_taken = state["cards_to_be_taken"]
 
-	# Reconstruir la carta del descarte
-	var top = GameState.dict_to_card(state["discard_top"])
-	discard_pile = [top]
-
-	emit_signal("discard_pile_changed")
+	#Solo reconstruir el descarte si cambio
+	var top_data = state["discard_top"]
+	var current_top = discard_pile.back() if not discard_pile.is_empty() else null
+	var needs_update = true
+	if current_top != null:
+		if current_top.get_meta("Color") == top_data["color"] and current_top.get_meta("Value") == top_data["value"]:
+			needs_update = false
+	if needs_update:
+		var top = GameState.dict_to_card(top_data)
+		discard_pile = [top]
+		emit_signal("discard_pile_changed")
 	emit_signal("new_round")
 	emit_signal("multiplayer_state_updated")
 
@@ -325,7 +341,7 @@ func _is_my_turn() -> bool:
 	if not is_multiplayer:
 		return true
 	var ordered = NetworkManager.get_ordered_ids()
-	if ordered.is_empty():
+	if ordered.is_empty() or current_player >= ordered.size():
 		return false
 	return ordered[current_player] == NetworkManager.get_my_id()
 
@@ -347,12 +363,14 @@ func _set_hand_by_index(idx: int, hand: Array) -> void:
 func next_turn(skip: bool = false, reverse: bool = false) -> void:
 	if reverse:
 		clockwise = not clockwise
+	var player_count_total = NetworkManager.get_ordered_ids().size() if is_multiplayer else players.size()
+	
 	var direction_modifier = 1 if clockwise else -1
 	if skip:
 		direction_modifier *= 2
-	var new_index = (current_player + direction_modifier) % players.size()
+	var new_index = (current_player + direction_modifier) % player_count_total
 	if new_index < 0:
-		new_index += players.size()
+		new_index += player_count_total
 	current_player = new_index
 	new_round.emit()
 

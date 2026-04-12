@@ -8,29 +8,34 @@ signal take_card_button_clicked
 @onready var take_card_label = $TakeCardButton/TakeCardLabel
 
 func change_pointer_color(target_color: Color, transition_time: float = 0) -> void:
+	if transition_time <= 0:
+		pointer.color = target_color
+		return
 	var tween = create_tween().set_parallel()
 	tween.tween_property(pointer, "color", target_color, transition_time)
 
 func change_pointer_position(target_progress_ratio: float, transition_time: float = 0) -> void:
-	var tween = create_tween().set_parallel()
 	var current_progress_ratio = path_follower.progress_ratio
-	if transition_time == 0:
+	if abs(current_progress_ratio - target_progress_ratio) < 0.001:
+		return
+	if transition_time <= 0:
 		path_follower.progress_ratio = target_progress_ratio
+		return
+	var tween = create_tween().set_parallel()
+	if GameMaster.clockwise:
+		if target_progress_ratio < current_progress_ratio:
+			tween.tween_property(path_follower, "progress_ratio", 1.0, transition_time)
+			tween.chain().tween_property(path_follower, "progress_ratio", 0.0, 0.0)
+			tween.chain().tween_property(path_follower, "progress_ratio", target_progress_ratio, transition_time)
+		else:
+			tween.tween_property(path_follower, "progress_ratio", target_progress_ratio, transition_time).set_ease(Tween.EASE_OUT_IN)
 	else:
-		if GameMaster.clockwise:
-			if target_progress_ratio < current_progress_ratio:
-				tween.tween_property(path_follower, "progress_ratio", 1, transition_time)
-				tween.chain().tween_property(path_follower, "progress_ratio", 0, 0)
-				tween.chain().tween_property(path_follower, "progress_ratio", target_progress_ratio, transition_time)
-			else:
-				tween.tween_property(path_follower, "progress_ratio", target_progress_ratio, transition_time).set_ease(Tween.EASE_OUT_IN)
-		elif not GameMaster.clockwise:
-			if target_progress_ratio > current_progress_ratio:
-				tween.tween_property(path_follower, "progress_ratio", 0, transition_time)
-				tween.chain().tween_property(path_follower, "progress_ratio", 1, 0)
-				tween.chain().tween_property(path_follower, "progress_ratio", target_progress_ratio, transition_time)
-			else:
-				tween.tween_property(path_follower, "progress_ratio", target_progress_ratio, transition_time)
+		if target_progress_ratio > current_progress_ratio:
+			tween.tween_property(path_follower, "progress_ratio", 0.0, transition_time)
+			tween.chain().tween_property(path_follower, "progress_ratio", 1.0, 0.0)
+			tween.chain().tween_property(path_follower, "progress_ratio", target_progress_ratio, transition_time)
+		else:
+			tween.tween_property(path_follower, "progress_ratio", target_progress_ratio, transition_time)
 
 func change_take_card_button_color(target_color: Color, transition_time: float = 0.0) -> void:
 	var tween = create_tween().set_parallel()
@@ -38,16 +43,31 @@ func change_take_card_button_color(target_color: Color, transition_time: float =
 
 func _on_take_card_button_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.is_pressed():
-		if GameMaster.current_player == 0:
+		if GameMaster.is_multiplayer:
+			#En multijugador solo actuar si es nuestro turno
+			if not GameMaster._is_my_turn():
+				return
 			if GameMaster.cards_to_be_taken > 0:
-				GameMaster.draw_to_player_hand(GameMaster.cards_to_be_taken)
-				GameMaster.cards_to_be_taken = 0
-				change_take_card_button_number(1, 0.5)
+				change_take_card_button_number(1)
 				take_card_button_clicked.emit()
 			else:
-				GameMaster.draw_to_player_hand(1)
+				GameMaster.mp_request_draw()
 				take_card_button_clicked.emit()
+		else:
+			#logica original del single player
+			if GameMaster.current_player == 0:
+				if GameMaster.cards_to_be_taken > 0:
+					GameMaster.draw_to_player_hand(GameMaster.cards_to_be_taken)
+					GameMaster.cards_to_be_taken = 0
+					change_take_card_button_number(1, 0.5)
+					take_card_button_clicked.emit()
+				else:
+					GameMaster.draw_to_player_hand(1)
+					take_card_button_clicked.emit()
 
 func change_take_card_button_number(target_number: int = 1, transition_time: float = 0.0) -> void:
-	var tween = create_tween().set_parallel()
-	tween.tween_property(take_card_label, "text", "Take Cards (+" + str(target_number) + ")", transition_time)
+	take_card_label.text = "Take Cards (+" + str(target_number) + ")"
+	#Animación de "pop" en escala como feedback visual
+	var tween = create_tween()
+	tween.tween_property(take_card_label, "scale", Vector2(1.2, 1.2), 0.1)
+	tween.tween_property(take_card_label, "scale", Vector2(1.0, 1.0), 0.1)

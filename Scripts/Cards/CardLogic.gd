@@ -17,6 +17,7 @@ var default_scale: Vector2 #the scale of the card when initialized
 var hovering = false #is the mouse hovering over the card
 
 func _ready() -> void:
+	await get_tree().process_frame
 	var game_screen = get_tree().root.get_node("GameScreen")
 	card_played.connect(game_screen._on_card_played)
 	
@@ -115,47 +116,33 @@ func can_be_played(card: Node2D = self, cpu_hand: bool = false, picker: bool = f
 		if not GameMaster._is_my_turn():
 			return false
 	
+	#Si no tiene el meta CanBePlayed y no es cpu ni multiplayer, bloquear
+	if not cpu_hand and not GameMaster.is_multiplayer:
+		if not card.get_meta("CanBePlayed"):
+			return false
+	
 	var played_card_color = card.get_meta("Color")
 	var played_card_value = card.get_meta("Value")
-	if cpu_hand:
-		if picker:
-			if played_card_value == "Picker" or played_card_value == "PickFour":
-				if played_card_value == GameMaster.get_top_discard_card().get_meta("Value"):
-					return true
-				else:
-					return false
-			else:
-				return false
-		else:
-			if played_card_color == "Wild":
-				return true
-			elif played_card_color == GameMaster.current_color:
-				return true
-			elif played_card_value == GameMaster.get_top_discard_card().get_meta("Value"):
-				return true
-			else:
-				return false
-	else:
-		if picker:
-			if played_card_value == "Picker" or played_card_value == "PickFour":
-				if played_card_value == GameMaster.get_top_discard_card().get_meta("Value"):
-					return true
-				else:
-					return false
-			else:
-				return false
-		else:
-			if card.get_meta("CanBePlayed"):
-				if played_card_color == "Wild":
-					return true
-				elif played_card_color == GameMaster.current_color:
-					return true
-				elif played_card_value == GameMaster.get_top_discard_card().get_meta("Value"):
-					return true
-				else:
-					return false
-			else:
-				return false
+	var top_color = GameMaster.current_color
+	var top_value = GameMaster.get_top_discard_card().get_meta("Value")
+	
+	if picker:
+		if played_card_value != "Picker" and played_card_value != "PickFour":
+			return false
+		return played_card_value == top_value
+		
+	#Logica UNO estandar unificada para todos los casos:
+	#1. Wild siempre se puede jugar
+	if played_card_color == "Wild":
+		return true
+	#Mismo color que el color activo
+	if played_card_color == top_color:
+		return true
+	#3. Mismo color que la carta del tope (solo numeros y especiales del mismo tipo)
+	if played_card_value == top_value:
+		return true
+	
+	return false
 
 func set_card_back(card_back: bool) -> void:
 	if card_back:
@@ -174,6 +161,10 @@ func _play_card_multiplayer() -> void:
 
 	# Si es Wild o PickFour, el jugador debe elegir color primero
 	if color == "Wild":
-		emit_signal("color_pick_needed", color, value)
+		var game_screen = get_tree().root.get_node("GameScreen")
+		game_screen.color_selector.show()
+		await game_screen.color_selector.color_selected
+		var chosen = GameMaster.current_color
+		GameMaster.mp_request_play(color, value, chosen)
 	else:
-		GameMaster.mp_request_play(color, value)
+		GameMaster.mp_request_play(color, value, "")
