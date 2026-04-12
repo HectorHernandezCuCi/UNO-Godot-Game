@@ -186,6 +186,9 @@ func _init_multiplayer_ui() -> void:
 func _on_multiplayer_state_updated() -> void:
 	if game_ended:
 		return
+	if not is_instance_valid(game_hud):
+		return
+	player_hand.can_play(false)
 
 	# Refrescar descarte y mano (las señales player_hand_changed y
 	# discard_pile_changed ya se emiten en _rpc_receive_state/_rpc_receive_hand)
@@ -207,13 +210,13 @@ func _on_multiplayer_state_updated() -> void:
 			await game_hud.take_card_button_clicked
 			# Robar cartas por red
 			GameMaster.mp_request_draw_penalty()
-			player_hand.can_play()
+			player_hand.can_play(false)
 		else:
 			game_hud.change_take_card_button_number(1, 0.5)
 			game_hud.change_take_card_button_color(
 				GameMaster.color_map[GameMaster.current_color], 0.5
 			)
-			player_hand.can_play()
+			player_hand.can_play(true)
 	else:
 		# No es mi turno — deshabilitar mano
 		game_hud.change_take_card_button_color(Color.WHITE, 0.5)
