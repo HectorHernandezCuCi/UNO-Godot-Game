@@ -22,7 +22,21 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
 # ═══════════════════════════════════════════════
-#  GESTIÓN DE SERVIDOR / CLIENTE
+#  GESTIÓN DE ESCENA SINCRONIZADA
+# ═══════════════════════════════════════════════
+
+# Función que llama el Host para iniciar el juego en todos los clientes
+func host_start_game() -> void:
+	if is_host():
+		# "authority": solo el host manda, "call_local": también se ejecuta en el host
+		change_scene_to_game.rpc("res://Scenes/Game/GameScreen.tscn")
+
+@rpc("authority", "call_local", "reliable")
+func change_scene_to_game(scene_path: String) -> void:
+	get_tree().change_scene_to_file(scene_path)
+
+# ═══════════════════════════════════════════════
+#  SERVIDOR Y CLIENTE
 # ═══════════════════════════════════════════════
 
 func create_server(username: String) -> void:
@@ -33,7 +47,6 @@ func create_server(username: String) -> void:
 		return
 
 	multiplayer.multiplayer_peer = peer
-	# El host siempre es ID 1
 	players[1] = {"username": username}
 	
 	current_room_code = RoomRegistry.host_open_room()
@@ -46,7 +59,6 @@ func join_by_code(code: String, username: String) -> void:
 	local_username = username
 	current_room_code = code
 	
-	# Limpiar señales previas para evitar conexiones dobles
 	if RoomRegistry.room_found.is_connected(_connect_to_ip):
 		RoomRegistry.room_found.disconnect(_connect_to_ip)
 	
@@ -56,8 +68,7 @@ func join_by_code(code: String, username: String) -> void:
 
 func _connect_to_ip(ip: String, username: String) -> void:
 	var peer = ENetMultiplayerPeer.new()
-	var err = peer.create_client(ip, PORT)
-	if err == OK:
+	if peer.create_client(ip, PORT) == OK:
 		multiplayer.multiplayer_peer = peer
 	else:
 		connection_failed.emit()
@@ -70,17 +81,15 @@ func disconnect_game() -> void:
 	current_room_code = ""
 
 # ═══════════════════════════════════════════════
-#  CALLBACKS DE RED
+#  CALLBACKS Y REGISTRO
 # ═══════════════════════════════════════════════
 
 func _on_peer_connected(id: int) -> void:
-	# Si yo soy el Host, le mando al nuevo la lista de todos los que ya están
 	if is_host():
 		for pid in players:
 			_register_player.rpc_id(id, players[pid].username, pid)
 
 func _on_connected_to_server() -> void:
-	# Al conectar, le mando mi nombre al Host para que me registre
 	_register_player.rpc_id(1, local_username, get_my_id())
 	joined_server.emit()
 
@@ -98,31 +107,15 @@ func _on_server_disconnected() -> void:
 	players.clear()
 	server_disconnected.emit()
 
-# ═══════════════════════════════════════════════
-#  RPC - REGISTRO DE JUGADORES
-# ═══════════════════════════════════════════════
-
 @rpc("any_peer", "reliable")
 func _register_player(username: String, id_to_register: int) -> void:
-	# Registrar al jugador en el diccionario local
 	players[id_to_register] = {"username": username}
 	player_registered.emit(id_to_register, username)
-	
-	# Si soy el host y acabo de recibir un nuevo jugador, 
-	# aviso a los demás clientes sobre este nuevo integrante
 	if is_host():
 		_register_player.rpc(username, id_to_register)
 
-# ═══════════════════════════════════════════════
-#  UTILIDADES
-# ═══════════════════════════════════════════════
-
-func is_host() -> bool:
-	return multiplayer.is_server()
-
-func get_my_id() -> int:
-	return multiplayer.get_unique_id()
-
+func is_host() -> bool: return multiplayer.is_server()
+func get_my_id() -> int: return multiplayer.get_unique_id()
 func get_ordered_ids() -> Array:
 	var ids = players.keys()
 	ids.sort()

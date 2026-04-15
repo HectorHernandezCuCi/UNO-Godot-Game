@@ -19,9 +19,9 @@ func _ready() -> void:
 	
 	NetworkManager.player_registered.connect(_on_player_update)
 	NetworkManager.player_disconnected.connect(_on_player_update)
-	GameMaster.game_started_multiplayer.connect(_on_game_started)
-
-	# MOSTRAR CÓDIGO EN LUGAR DE IP
+	# Nota: GameMaster.game_started_multiplayer ya no es estrictamente necesario 
+	# si el cambio de escena lo hace NetworkManager, pero lo dejamos por si acaso.
+	
 	if NetworkManager.current_room_code != "":
 		ip_value_label.text = "CÓDIGO: " + NetworkManager.current_room_code
 	else:
@@ -42,24 +42,24 @@ func _refresh_ui(_a = null, _b = null) -> void:
 		var slot = player_slots[i]
 		if i < ids.size():
 			var pid = ids[i]
-			var username = NetworkManager.players[pid].username
-			slot.get_node("NameLabel").text = username + (" (tú)" if pid == NetworkManager.get_my_id() else "")
-			slot.get_node("Badge").visible = true
-			slot.modulate = Color.WHITE
+			if NetworkManager.players.has(pid):
+				var username = NetworkManager.players[pid].username
+				slot.get_node("NameLabel").text = username + (" (tú)" if pid == NetworkManager.get_my_id() else "")
+				slot.get_node("Badge").visible = true
+				slot.modulate = Color.WHITE
 		else:
 			slot.get_node("NameLabel").text = "Esperando..."
 			slot.get_node("Badge").visible = false
 			slot.modulate = Color(1, 1, 1, 0.4)
 
 func _on_start_pressed() -> void:
-	GameMaster.start_multiplayer_game()
+	if NetworkManager.is_host():
+		# Llamamos a la nueva función de red que cambia la escena para todos
+		NetworkManager.host_start_game()
 
 func _on_leave_pressed() -> void:
 	NetworkManager.disconnect_game()
 	SceneManager.go_to_menu()
-
-func _on_game_started() -> void:
-	get_tree().change_scene_to_file("res://Scenes/Game/GameScreen.tscn")
 
 func _on_player_update(_a=null, _b=null) -> void:
 	_refresh_ui()
