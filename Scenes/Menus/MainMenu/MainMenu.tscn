@@ -129,12 +129,12 @@ text = "UNO GAME"
 [node name="StartGame" parent="MarginContainer/VBoxContainer" unique_id=1280119290 instance=ExtResource("1_qi05h")]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_j08g8")
-text = "Start Game"
+text = "Iniciar Juego"
 
 [node name="Multiplayer" parent="MarginContainer/VBoxContainer" unique_id=1740155487 instance=ExtResource("1_qi05h")]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_j8imo")
-text = "Multiplayer"
+text = "Multijugador"
 
 [node name="Settings" parent="MarginContainer/VBoxContainer" unique_id=1198540474 instance=ExtResource("1_qi05h")]
 layout_mode = 2
@@ -144,7 +144,7 @@ text = "Ajustes"
 [node name="Exit" parent="MarginContainer/VBoxContainer" unique_id=1584882202 instance=ExtResource("1_qi05h")]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_3ukl8")
-text = "EXIT"
+text = "SALIR"
 
 [connection signal="pressed" from="MarginContainer/VBoxContainer/StartGame" to="." method="_on_start_game_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/Multiplayer" to="." method="_on_multiplayer_pressed"]

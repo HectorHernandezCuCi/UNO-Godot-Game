@@ -122,7 +122,7 @@ func update_hand() -> void:
 	elif card_count == 0:
 		match hand_id:
 			"Player's Hand":
-				someone_won.emit("Player")
+				someone_won.emit("Jugador")
 			"Cpu1's Hand":
 				someone_won.emit("Cpu 1")
 			"Cpu2's Hand":

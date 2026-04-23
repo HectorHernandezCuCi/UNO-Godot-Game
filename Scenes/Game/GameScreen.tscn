@@ -221,7 +221,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 17
-text = "Take Cards"
+text = "Tomar Cartas"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -363,7 +363,7 @@ offset_bottom = -192.0
 grow_horizontal = 2
 grow_vertical = 2
 bbcode_enabled = true
-text = "[center][font s=50]Choose a New [wave][rainbow freq=0.2 sat=0.4 val=0.9]Color[/rainbow][/wave] to Play"
+text = "[center][font s=50]Elige un Nuevo [wave][rainbow freq=0.2 sat=0.4 val=0.9]Color[/rainbow][/wave] para Jugar"
 fit_content = true
 scroll_active = false
 shortcut_keys_enabled = false
@@ -414,7 +414,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_y2hvo")
 [node name="Wins" type="Label" parent="GameOverScreen/PlayerWins" unique_id=242469331]
 layout_mode = 2
 theme_override_font_sizes/font_size = 100
-text = "Wins"
+text = "Gana"
 
 [node name="Buttons" type="HBoxContainer" parent="GameOverScreen" unique_id=1499257981]
 modulate = Color(1, 1, 1, 0)
@@ -439,7 +439,7 @@ theme_override_font_sizes/font_size = 30
 theme_override_styles/normal = SubResource("StyleBoxFlat_1tqon")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_jcfdo")
 theme_override_styles/hover = SubResource("StyleBoxFlat_2hgvg")
-text = "Restart"
+text = "Reiniciar"
 
 [node name="Main Menu" type="Button" parent="GameOverScreen/Buttons" unique_id=1779887139]
 layout_mode = 2
@@ -447,7 +447,7 @@ theme_override_font_sizes/font_size = 30
 theme_override_styles/normal = SubResource("StyleBoxFlat_1tqon")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_kibcw")
 theme_override_styles/hover = SubResource("StyleBoxFlat_w8bo4")
-text = "Main Menu"
+text = "Menú Principal"
 
 [node name="PauseLayer" type="CanvasLayer" parent="." unique_id=1430802836]
 

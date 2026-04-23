@@ -50,4 +50,4 @@ func _on_take_card_button_gui_input(event: InputEvent) -> void:
 
 func change_take_card_button_number(target_number: int = 1, transition_time: float = 0.0) -> void:
 	var tween = create_tween().set_parallel()
-	tween.tween_property(take_card_label, "text", "Take Cards (+" + str(target_number) + ")", transition_time)
+	tween.tween_property(take_card_label, "text", "Tomar Cartas (+" + str(target_number) + ")", transition_time)
