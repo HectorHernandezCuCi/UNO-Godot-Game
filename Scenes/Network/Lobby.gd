@@ -54,7 +54,7 @@ func _refresh_ui(_a = null, _b = null) -> void:
 
 func _on_start_pressed() -> void:
 	if NetworkManager.is_host():
-		# Llamamos a la nueva función de red que cambia la escena para todos
+		GameMaster.is_multiplayer = true   # ← agregar esta línea
 		NetworkManager.host_start_game()
 
 func _on_leave_pressed() -> void:

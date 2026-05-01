@@ -1,11 +1,12 @@
 extends Node
 
-const PORT = 7777
+const PORT       = 7777
 const MAX_PLAYERS = 5
 
-var players: Dictionary = {}
-var local_username: String = "Jugador"
-var current_room_code: String = ""
+var players:           Dictionary = {}
+var local_username:    String     = "Jugador"
+var current_room_code: String     = ""
+var _ready_count:      int        = 0
 
 signal server_created(code: String)
 signal joined_server
@@ -22,18 +23,29 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
 # ═══════════════════════════════════════════════
-#  GESTIÓN DE ESCENA SINCRONIZADA
+#  CAMBIO DE ESCENA SINCRONIZADO
 # ═══════════════════════════════════════════════
 
-# Función que llama el Host para iniciar el juego en todos los clientes
 func host_start_game() -> void:
-	if is_host():
-		# "authority": solo el host manda, "call_local": también se ejecuta en el host
-		change_scene_to_game.rpc("res://Scenes/Game/GameScreen.tscn")
+	if not is_host(): return
+	_ready_count = 0
+	# Marcar modo multiplayer en todos ANTES de cambiar escena
+	# para que GameScreen._ready() lo detecte correctamente
+	_rpc_set_multiplayer_and_change_scene.rpc()
 
 @rpc("authority", "call_local", "reliable")
-func change_scene_to_game(scene_path: String) -> void:
-	get_tree().change_scene_to_file(scene_path)
+func _rpc_set_multiplayer_and_change_scene() -> void:
+	GameMaster.is_multiplayer = true
+	get_tree().change_scene_to_file("res://Scenes/Game/GameScreen.tscn")
+
+# GameScreen._ready() llama esto cuando terminó de cargar.
+# El host lo recibe y cuenta; cuando todos confirman, inicia el juego.
+@rpc("any_peer", "reliable")
+func confirm_scene_ready() -> void:
+	if not is_host(): return
+	_ready_count += 1
+	if _ready_count >= players.size():
+		GameMaster.start_multiplayer_game()
 
 # ═══════════════════════════════════════════════
 #  SERVIDOR Y CLIENTE
@@ -45,10 +57,8 @@ func create_server(username: String) -> void:
 	if peer.create_server(PORT, MAX_PLAYERS) != OK:
 		connection_failed.emit()
 		return
-
 	multiplayer.multiplayer_peer = peer
 	players[1] = {"username": username}
-	
 	current_room_code = RoomRegistry.host_open_room()
 	if current_room_code.is_empty():
 		connection_failed.emit()
@@ -56,12 +66,10 @@ func create_server(username: String) -> void:
 	server_created.emit(current_room_code)
 
 func join_by_code(code: String, username: String) -> void:
-	local_username = username
+	local_username    = username
 	current_room_code = code
-	
 	if RoomRegistry.room_found.is_connected(_connect_to_ip):
 		RoomRegistry.room_found.disconnect(_connect_to_ip)
-	
 	RoomRegistry.room_found.connect(_connect_to_ip.bind(username), CONNECT_ONE_SHOT)
 	RoomRegistry.room_not_found.connect(func(): connection_failed.emit(), CONNECT_ONE_SHOT)
 	RoomRegistry.client_find_room(code)
@@ -74,11 +82,12 @@ func _connect_to_ip(ip: String, username: String) -> void:
 		connection_failed.emit()
 
 func disconnect_game() -> void:
-	if is_host(): 
-		RoomRegistry.host_close_room()
+	if is_host(): RoomRegistry.host_close_room()
 	multiplayer.multiplayer_peer = null
 	players.clear()
-	current_room_code = ""
+	current_room_code    = ""
+	_ready_count         = 0
+	GameMaster.is_multiplayer = false
 
 # ═══════════════════════════════════════════════
 #  CALLBACKS Y REGISTRO
@@ -114,8 +123,8 @@ func _register_player(username: String, id_to_register: int) -> void:
 	if is_host():
 		_register_player.rpc(username, id_to_register)
 
-func is_host() -> bool: return multiplayer.is_server()
-func get_my_id() -> int: return multiplayer.get_unique_id()
+func is_host() -> bool:    return multiplayer.is_server()
+func get_my_id() -> int:   return multiplayer.get_unique_id()
 func get_ordered_ids() -> Array:
 	var ids = players.keys()
 	ids.sort()

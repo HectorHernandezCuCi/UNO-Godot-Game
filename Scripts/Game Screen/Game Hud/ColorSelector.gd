@@ -97,7 +97,7 @@ func _select_color(chosen: String) -> void:
 
 	if GameMaster.is_multiplayer:
 		# Enviar la jugada Wild al host con el color elegido
-		GameMaster.mp_request_play(_pending_card_color, _pending_card_value, chosen)
+		GameMaster.mp_play_card(_pending_card_color, _pending_card_value, chosen)
 		_pending_card_color = ""
 		_pending_card_value = ""
 
