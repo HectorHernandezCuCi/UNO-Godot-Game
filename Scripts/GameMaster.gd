@@ -44,6 +44,67 @@ var _peer_index:      Dictionary = {}   # peer_id → índice en _mp_hands
 var _player_count_mp: int        = 0
 
 # ═══════════════════════════════════════════════
+#  INICIALIZACIÓN
+# ═══════════════════════════════════════════════
+func _ready() -> void:
+	NetworkManager.player_disconnected.connect(_on_player_disconnected)
+
+func _on_player_disconnected(peer_id: int) -> void:
+	if not is_multiplayer or not NetworkManager.is_host():
+		return
+
+	var idx = _peer_index.get(peer_id, -1)
+	if idx == -1: return
+
+	# 1. Devolver cartas del jugador desconectado al mazo
+	for card in _mp_hands[idx]:
+		deck.insert(0, card)
+	
+	# 2. Ajustar cantidad de jugadores
+	_player_count_mp -= 1
+	player_count = _player_count_mp
+	
+	# 3. Victoria si solo queda 1 jugador
+	if _player_count_mp <= 1:
+		_host_sync_hands()
+		_host_sync_state()
+		var winner_id = 1
+		var ordered = NetworkManager.get_ordered_ids()
+		if ordered.size() > 0: winner_id = ordered[0]
+		_rpc_notify_game_over.rpc(winner_id)
+		return
+
+	# 4. Eliminar datos internos del jugador
+	var new_ordered = NetworkManager.get_ordered_ids()
+	var new_mp_hands = []
+	var new_peer_index = {}
+	
+	for i in new_ordered.size():
+		var id = new_ordered[i]
+		var old_idx = _peer_index[id]
+		new_mp_hands.append(_mp_hands[old_idx])
+		new_peer_index[id] = i
+	
+	_mp_hands = new_mp_hands
+	_peer_index = new_peer_index
+
+	# 5. Ajustar índice del turno actual
+	if current_player > idx:
+		current_player -= 1
+	elif current_player == idx:
+		if not clockwise:
+			current_player -= 1
+		
+		if current_player >= _player_count_mp:
+			current_player = 0
+		if current_player < 0:
+			current_player = _player_count_mp - 1
+
+	# 6. Sincronizar el nuevo estado con todos
+	_host_sync_hands()
+	_host_sync_state()
+
+# ═══════════════════════════════════════════════
 #  CONSTANTES
 # ═══════════════════════════════════════════════
 const color_map = {
