@@ -56,11 +56,9 @@ func _host_poll() -> void:
 		var sender_port = _udp_server.get_packet_port()
 
 		if msg == "FIND:" + _room_code:
-			# Responder directamente al cliente
-			var reply = PacketPeerUDP.new()
-			reply.set_dest_address(sender_ip, sender_port)
-			reply.put_packet(("FOUND:" + _room_code).to_utf8_buffer())
-			reply.close()
+			# Responder directamente usando el mismo socket para evitar el firewall
+			_udp_server.set_dest_address(sender_ip, sender_port)
+			_udp_server.put_packet(("FOUND:" + _room_code).to_utf8_buffer())
 			print("RoomRegistry: cliente encontró sala desde %s" % sender_ip)
 
 # ═══════════════════════════════════════════════
@@ -82,9 +80,18 @@ func client_find_room(code: String) -> void:
 	_broadcast_timer.autostart = true
 	_broadcast_timer.timeout.connect(func():
 		attempts += 1
-		# Broadcast a toda la red local
+		# Broadcast genérico a toda la red local
 		_udp_client.set_dest_address("255.255.255.255", BROADCAST_PORT)
 		_udp_client.put_packet(("FIND:" + code).to_utf8_buffer())
+		
+		# Broadcast específico de subred (Evita problemas si hay VirtualBox/WSL/VPN)
+		for ip_addr in IP.get_local_addresses():
+			var parts = ip_addr.split(".")
+			if parts.size() == 4 and not ip_addr.begins_with("127."):
+				parts[3] = "255"
+				var subnet_broadcast = ".".join(parts)
+				_udp_client.set_dest_address(subnet_broadcast, BROADCAST_PORT)
+				_udp_client.put_packet(("FIND:" + code).to_utf8_buffer())
 
 		# Revisar si llegó respuesta
 		while _udp_client.get_available_packet_count() > 0:
