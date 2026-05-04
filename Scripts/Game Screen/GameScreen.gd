@@ -37,8 +37,14 @@ func _ready() -> void:
 			NetworkManager.confirm_scene_ready()
 		else:
 			NetworkManager.confirm_scene_ready.rpc_id(1)
+			
+		NetworkManager.server_disconnected.connect(_on_server_disconnected)
 	else:
 		init_game()
+
+func _on_server_disconnected() -> void:
+	NetworkManager.disconnect_game()
+	SceneManager.go_to_menu()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

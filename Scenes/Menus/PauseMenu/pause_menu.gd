@@ -9,4 +9,6 @@ func _on_resume_pressed() -> void:
 
 
 func _on_exit_game_pressed() -> void:
+	if GameMaster.is_multiplayer:
+		NetworkManager.disconnect_game()
 	SceneManager.go_to_main_menu()
