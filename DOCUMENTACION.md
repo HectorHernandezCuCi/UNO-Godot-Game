@@ -238,23 +238,50 @@ Gestión de música y efectos de sonido
 
 ## Sistema de Red
 
-### Arquitectura
+El sistema de red de UNO Godot Game está diseñado para proporcionar una experiencia multijugador fluida y sincronizada en una red local (LAN).
 
-Modelo cliente-servidor donde el host actúa como autoridad:
+### Arquitectura de Conexión
 
-- Cliente envía acciones
-- Servidor valida
-- Servidor sincroniza estado
+Se utiliza una arquitectura de red tipo **Cliente-Servidor (Autoritativo)** donde el creador de la sala (Host) actúa simultáneamente como cliente local y como servidor de autoridad. El sistema se apoya en dos protocolos principales:
 
-### Puertos
+1. **ENet (Puerto 7777 TCP/UDP):** Utilizado para la comunicación principal del juego. Garantiza la entrega de paquetes críticos (sincronización de estado, jugadas) y permite una comunicación rápida de baja latencia mediante RPCs (Remote Procedure Calls). El Host mantiene la verdad absoluta del estado del juego (mazo, pila de descarte, manos de los jugadores).
+2. **Broadcast UDP (Puerto 7778):** Implementado en el script `RoomRegistry.gd`. Permite el descubrimiento automático de salas en la red local mediante un código numérico de 4 dígitos, eliminando la necesidad de introducir direcciones IP manualmente.
 
-- 7777: Comunicación principal (ENet)
-- 7778: Descubrimiento de salas (UDP)
+### Flujo de Sincronización
 
-### Seguridad
+- **Inicialización:** Al comenzar la partida, el Host carga la escena de juego en todos los clientes y espera la confirmación (ready). Una vez todos confirman, el Host reparte las cartas, establece la carta inicial del descarte y sincroniza el estado completo hacia todos los clientes (`GameState.gd`).
+- **Validación de Jugadas:** Cuando un cliente intenta jugar una carta, la acción se envía mediante RPC al servidor. El servidor valida la jugada contra las reglas en `CardLogic.gd`. Si es válida, el servidor actualiza su estado interno y luego emite un RPC para sincronizar el nuevo estado (incluyendo el cambio de turno) con todos los clientes.
 
-- Validación de turno en servidor
-- Verificación de jugadas válidas
+---
+
+## Pruebas Realizadas y Resultados
+
+Durante la fase de desarrollo y validación del multijugador, se llevaron a cabo diversas pruebas en entornos controlados:
+
+1. **Pruebas de Descubrimiento LAN:** 
+   - *Descripción:* Conexión de múltiples clientes utilizando códigos de sala en diferentes dispositivos de la misma red WiFi/Ethernet.
+   - *Resultado:* El broadcast UDP responde de manera confiable. Los clientes descubren la IP del Host a partir del código de sala en menos de un segundo y establecen la conexión ENet con éxito.
+2. **Pruebas de Sincronización Inicial:** 
+   - *Descripción:* Verificación de la propagación del estado inicial (mazo, descarte y manos) al cargar la pantalla de juego.
+   - *Resultado:* Se superó un problema de condición de carrera inicial. Actualmente, el juego espera a que todos los clientes confirmen que la escena está lista antes de que el Host envíe el estado sincronizado, garantizando que nadie inicie sin cartas o sin visualizar la pila de descarte.
+3. **Pruebas de Desconexión de Jugadores:**
+   - *Descripción:* Simulación de cierre inesperado o caída de red de uno de los clientes durante su turno.
+   - *Resultado:* El sistema captura la señal `peer_disconnected` y remueve los datos del jugador desconectado. El juego ajusta dinámicamente el orden de turnos sin interrumpir la partida. Si todos los oponentes se desconectan, el último jugador es declarado ganador.
+
+---
+
+## Mejoras y Optimizaciones Futuras
+
+El sistema actual es robusto para redes locales, pero existen áreas de oportunidad para escalar la experiencia:
+
+1. **Soporte de Multijugador por Internet (WAN):** 
+   - Integrar un sistema de *Relay Servers* o *Punch-through* (usando STUN/TURN, como WebRTC) para que jugadores en diferentes redes puedan conectarse utilizando el código de sala sin requerir configuraciones de Port-Forwarding en sus routers.
+2. **Migración de Host (Host Migration):**
+   - Actualmente, si el Host se desconecta, la partida termina. Implementar un sistema de migración en el cual el estado sea delegado a otro cliente (que asumiría el rol de servidor) aseguraría la continuidad del juego.
+3. **Persistencia y Estadísticas en Línea:**
+   - Aprovechar la integración pre-configurada (y actualmente no utilizada) de *Nakama SDK* para habilitar cuentas de usuario, listas de amigos, estadísticas (ganadas/perdidas) y leaderboards.
+4. **Predicción y Reconciliación en Clientes (Client Prediction):**
+   - Para conexiones de mayor latencia, permitir que los clientes realicen las animaciones y reproduzcan sonidos localmente al instante de jugar una carta, en lugar de esperar la confirmación del servidor para ejecutar el feedback visual, mejorando la sensación de respuesta.
 
 ---
 
